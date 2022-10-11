@@ -48,7 +48,7 @@ Rec: pixbit-d
 Ejemplo uso: 
 pixbit-d(10, 10, 1, 5, Lista). Devuelve Lista = [10, 10, 1, 5].
 */
-pixbit-d(X, Y, Bit, Depth, [X,Y,Bit,Depth]).
+pixbitD(X, Y, Bit, Depth, [X,Y,Bit,Depth]).
 
 
 /*Constructor pixrgb-d
@@ -58,7 +58,7 @@ Rec: pixrgb-d
 Ejemplo uso:
 pixrgb-d(10, 10, 255, 255,255, 10, Lista), Devuelve Lista = [10, 10, 255, 255, 255, 10].
 */
-pixrgb-d(X, Y, R, G, B, D, [X, Y, R, G, B, D]).
+pixrgbD(X, Y, R, G, B, D, [X, Y, R, G, B, D]).
 
 /*Constructor pixhex-d
 Predicado pixhex-d
@@ -66,7 +66,7 @@ Dom: Dominio: X(int) X Y(int) X hex(string) X D(int)
 Rec: pixhex-d
 Ejemplo uso: pixhex-d(10, 10, "#FF5733", 30, Lista), Devuelve lista = [10, 10, "#FF5733", 30].
 */
-pixhex-d(X, Y, Hex, D, [X, Y, Hex, D]).
+pixhexD(X, Y, Hex, D, [X, Y, Hex, D]).
 
 
 /*Constructor image
@@ -84,5 +84,35 @@ image(10,10,[L1,L2,L3,L4],LG)., Devuelve listaGeneral con todos los parametros d
 image(Width, Height, ListPixel, [Width, Height, ListPixel]).
 
 
+/*Predicado Bit
+Predicado para saber si un bit es 0 o 1.
+Dom: Bit o Elemento.
+Rec: Booleano, más que nada identificar si el bit es 0 o 1, esa es la única condición.
+
+Ejemplo uso: 
+(bit(0)).
+
+*/
+bit(Bit):-
+    Bit == 0,
+    Bit == 1.
+
+/*Predicado para verificar si en una lista es un bit. Aridad 1
+Dom: ListaPixel
+Rec: Booleano
+*/
+
+isListPixelABit?(ListPixel):-
+    pixbitd(_,_,Bit,_,ListPixel),
+    bit?(Bit).
+
+/*Predicado para saber si en una lista de pixeles hay un bit o contiene. Aridad 2
+Dom: ListPixel
+Rec: booleano
+*/
+
+listpixelIsABit([ListPixel|Cola]):-
+    isListPixelABit(ListPixel),
+    listpixelIsABit(Cola).
 
 
