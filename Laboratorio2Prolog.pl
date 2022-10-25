@@ -38,6 +38,7 @@ Dominio: X(int) X Y(int) X hex(string) X D(int)
 Recorrido: pixhex-d
 Meta primaria: pixhex-d
 Meta secundaria: imagen
+--------------------------------------------------------------------------------------------------------
 */
 
 
@@ -91,28 +92,36 @@ Rec: Booleano, más que nada identificar si el bit es 0 o 1, esa es la única co
 
 Ejemplo uso: 
 (bit(0)).
-
 */
-bit(Bit):-
+
+is_Abit(Bit):-
     Bit == 0,
     Bit == 1.
 
-/*Predicado para verificar si en una lista es un bit. Aridad 1
+/*Predicado para verificar si en una lista es un bit, Aridad 1
 Dom: ListaPixel
 Rec: Booleano
 */
 
-isListPixelABit?(ListPixel):-
-    pixbitd(_,_,Bit,_,ListPixel),
-    bit?(Bit).
+pixelABit(Pixel):-
+    pixbitD(_,_,Bit,_,Pixel),
+    is_Abit(Bit).
 
-/*Predicado para saber si en una lista de pixeles hay un bit o contiene. Aridad 2
+/*Predicado para saber si en una lista de pixeles hay un bit Aridad 2
 Dom: ListPixel
 Rec: booleano
 */
 
-listpixelIsABit([ListPixel|Cola]):-
-    isListPixelABit(ListPixel),
-    listpixelIsABit(Cola).
+containpixelABit([ListPixel|Cola]):-
+    pixelABit(ListPixel),
+    containpixelABit(Cola).
 
-
+/*Predicado para verificar la pertenencia en un pixbit-d
+Dom: pixrgb-d 
+Rec: Booleano
+*/
+isABitmap([]).
+isABitmap([Pixbitd| Cola]):-
+    pixbitD(_,_,Bit,_,Pixbitd),
+    (Bit==0 ; Bit==1),
+    containpixelABit(Cola).
