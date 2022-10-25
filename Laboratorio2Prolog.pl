@@ -108,12 +108,12 @@ pixelABit(Pixel):-
     is_Abit(Bit).
 
 /*Predicado para saber si en una lista de pixeles hay un bit Aridad 2
-Dom: ListPixel
+Dom: Pixel
 Rec: booleano
 */
 
-containpixelABit([ListPixel|Cola]):-
-    pixelABit(ListPixel),
+containpixelABit([Pixel|Cola]):-
+    pixelABit(Pixel),
     containpixelABit(Cola).
 
 /*Predicado para verificar la pertenencia en un pixbit-d
@@ -125,3 +125,15 @@ isABitmap([Pixbitd| Cola]):-
     pixbitD(_,_,Bit,_,Pixbitd),
     (Bit==0 ; Bit==1),
     containpixelABit(Cola).
+
+/*Predicado para verificar si existe bitmap en una imagen
+Dom: imagen
+Rec: imagen verificada->bitmap
+*/
+
+imagenABitmap([]).
+imagenABitmap(Imagen):-
+    Pixel = [],
+    image(_,_,Pixel,Imagen),
+    containpixelABit(Pixel).
+
