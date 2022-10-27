@@ -47,7 +47,9 @@ Predicado pixbit-d
 Dom: X(int) X Y(int) X Bit([0|1]) X Depth(int)
 Rec: pixbit-d
 Ejemplo uso: 
-pixbit-d(10, 10, 1, 5, Lista). Devuelve Lista = [10, 10, 1, 5].
+pixbitD(10, 0, 1, 1, Lista). Devuelve Lista = [10, 0, 1, 1].
+pixbitD(10, 5, 0, 5, Lista). Devuelve Lista = [10, 5, 0, 5].
+pixbitD(20, 20, 0, 10, Lista). Devuelve Lista = [20, 20, 0, 10].
 */
 pixbitD(X, Y, Bit, Depth, [X,Y,Bit,Depth]).
 
@@ -85,55 +87,43 @@ image(10,10,[L1,L2,L3,L4],LG)., Devuelve listaGeneral con todos los parametros d
 image(Width, Height, ListPixel, [Width, Height, ListPixel]).
 
 
-/*Predicado Bit
-Predicado para saber si un bit es 0 o 1.
-Dom: Bit o Elemento.
-Rec: Booleano, más que nada identificar si el bit es 0 o 1, esa es la única condición.
-
-Ejemplo uso: 
-(bit(0)).
-*/
-
-is_Abit(Bit):-
-    Bit == 0,
-    Bit == 1.
-
-/*Predicado para verificar si en una lista es un bit, Aridad 1
-Dom: ListaPixel
-Rec: Booleano
-*/
-
-pixelABit(Pixel):-
-    pixbitD(_,_,Bit,_,Pixel),
-    is_Abit(Bit).
-
-/*Predicado para saber si en una lista de pixeles hay un bit Aridad 2
-Dom: Pixel
-Rec: booleano
-*/
-
-containpixelABit([Pixel|Cola]):-
-    pixelABit(Pixel),
-    containpixelABit(Cola).
-
 /*Predicado para verificar la pertenencia en un pixbit-d
 Dom: pixrgb-d 
 Rec: Booleano
 */
 isABitmap([]).
-isABitmap([Pixbitd| Cola]):-
+isABitmap([Pixbitd|Cola]):-
     pixbitD(_,_,Bit,_,Pixbitd),
     (Bit==0 ; Bit==1),
-    containpixelABit(Cola).
+    isABitmap(Cola).
 
 /*Predicado para verificar si existe bitmap en una imagen
 Dom: imagen
-Rec: imagen verificada->bitmap
+Rec: Booleano
+Ejemplo de uso: 
+
+(pixbitD( 0, 0, 1, 10, PA), pixbitD( 0, 1, 0, 20, PB), 
+pixbitD( 1, 0, 0, 30, PC), 
+pixbitD( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I), 
+imagenABitmap(I)).
+Retorna Falso, hay que revisar la condicion
 */
 
 imagenABitmap([]).
 imagenABitmap(Imagen):-
-    Pixel = [],
     image(_,_,Pixel,Imagen),
-    containpixelABit(Pixel).
+    imagenABitmap(Pixel).
+
+/*Predicado para verificar si existe pixrgb en una imagen
+ Dom: pixrgb
+ Rec: Booleano
+*/
+isAPixrgbD([]).
+isAPixrgbD(R, G, B):-
+    pixrgbD(_,_,R,G,B,_),
+    ( R =< 0, R =< 255),
+    (G =< 0, G =< 255),
+    (B =< 0, B =< 255),
+    isAPixrgbD(R,G,B).
 
