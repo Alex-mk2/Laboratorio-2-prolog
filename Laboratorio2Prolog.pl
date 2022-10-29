@@ -120,10 +120,22 @@ imagenABitmap(Imagen):-
  Rec: Booleano
 */
 isAPixrgbD([]).
-isAPixrgbD(R, G, B):-
-    pixrgbD(_,_,R,G,B,_),
-    ( R =< 0, R =< 255),
+isAPixrgbD([Pixrgbd|Cola]):-
+    pixrgbD(_,_,R,G,B,_, Pixrgbd),
+    (R =< 0, R =< 255),
     (G =< 0, G =< 255),
     (B =< 0, B =< 255),
-    isAPixrgbD(R,G,B).
+    isAPixrgbD(Cola).
+
+/*Predicado para verificar si existe un pixmap
+ * Dom: pixmap
+ * Meta: Verificar si existe el pixmap (verdadero o falso).
+*/
+
+imagenIsAPixmap([]).
+imagenIsAPixmap(Imagen):-
+    image(_,_,Pixel,Imagen),
+    isAPixrgbD(Pixel),
+    imagenIsAPixmap(Pixel).
+
 
