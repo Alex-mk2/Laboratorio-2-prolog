@@ -113,6 +113,7 @@ Retorna Falso, hay que revisar la condicion
 imagenABitmap([]).
 imagenABitmap(Imagen):-
     image(_,_,Pixel,Imagen),
+    isABitmap(Pixel),
     imagenABitmap(Pixel).
 
 /*Predicado para verificar si existe pixrgb en una imagen
@@ -138,4 +139,24 @@ imagenIsAPixmap(Imagen):-
     isAPixrgbD(Pixel),
     imagenIsAPixmap(Pixel).
 
+/*Predicado para verificar si existe pixhex en una imagen
+ * Dom: pixhexD
+ * Meta o rec: verificar la existencia de pixhex y asi distinguir entre los 3 tipos de pixeles
+*/
 
+isAPixhex([]).
+isAPixhex([Pixhex|Cola]):-
+    pixhexD(_,_,Pixhex,_,Hex),
+    Hex = Pixhex,
+    isAPixhex(Cola).
+
+/*Predicado para verificar un hexmap
+ * Dom: PixhexD
+ * Meta o rec: verificar la existencia de un hexmap en una imagen
+*/
+
+imagenIsAHexmap([]).
+imagenIsAHexmap(Imagen):-
+    image(_,_,Pixel,Imagen),
+    isAPixhex(Pixel),
+    imagenIsAHexmap(Pixel).
