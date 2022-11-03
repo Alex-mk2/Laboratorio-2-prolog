@@ -54,6 +54,14 @@ pixbitD(20, 20, 0, 10, Lista). Devuelve Lista = [20, 20, 0, 10].
 pixbitD(X, Y, Bit, Depth, [X,Y,Bit,Depth]).
 
 
+/*Selectores  TDA pitbitD*/
+obtenerX([X|_], X).
+obtenerY([_|[Y|_]], Y).
+obtenerBit([_|[_|[Bit|_]]], Bit).
+obtenerDepth([_|[_|[_|[Depth|_]]]], Depth).
+obtenerListaPixel([_|[_|[_|[_|[ListaPixel|_]]]]], ListaPixel).
+
+
 /*Constructor pixrgb-d
 Predicado pixrgb.d
 Dom: X(int) X Y(int) X R(C) X G(C) X B(C) X D
@@ -64,6 +72,17 @@ pixrgb-d(5, 2, 55, 25,250, 4, Lista), Devuelve Lista = [5, 2, 55, 25, 250, 4].
 pixrgb-d(10, 10, 25, 25,25, 10, Lista), Devuelve Lista = [10, 10, 25, 25, 25, 10].
 */
 pixrgbD(X, Y, R, G, B, D, [X, Y, R, G, B, D]).
+
+
+/*Selectores  TDA pixrgbD
+Nota: No se repitieron los selectores X e Y ya que estan definidos*/
+obtenerR([_|[_|[R|_]]], R).
+obtenerG([_|[_|[_|[G|_]]]], G).
+obtenerB([_|[_|[_|[_|[B|_]]]]], B).
+obtenerD([_|[_|[_|[_|[_|[D|_]]]]]], D).
+
+
+
 
 /*Constructor pixhex-d
 Predicado pixhex-d
@@ -77,10 +96,17 @@ pixhex-d(2, 5, "#FA8072", 20, Lista), Devuelve lista = [2, 5, "#FA8072", 20].
 pixhexD(X, Y, Hex, D, [X, Y, Hex, D]).
 
 
+/*Selectores  TDA pixhexD
+Nota: No se repitieron los selectores X e Y ya que estan definidos*/
+obtenerHex([_|[_|[Hex|_]]], Hex).
+obtenerDHex([_|[_|[_|[D|_]]]], D).
+
+
+
 /*Constructor image
 Predicado image
 Dom: Width(int) X Height(int) X [pixbit-d | pixrgb-d | pixhex-d] Aridad 5
-Rec: image
+Meta: Construir la imagen
 Ejemplo uso: 
 pixbit-d(10,20,1,25,L1),
 pixbit-d(5,10,0,20,L2),
@@ -89,22 +115,35 @@ pixbit-d(10,10,0,22,L4),
 image(10,10,[L1,L2,L3,L4],LG)., Devuelve listaGeneral con todos los parametros dados
 */
 
-image(Width, Height, ListPixel, [Width, Height, ListPixel]).
+imagen(Alto, Ancho, ListaPixeles, [Alto, Ancho, ListaPixeles]).
 
+
+/*Selectores  TDA Image*/
+obtenerAlto([Width|_], Width).
+obtenerAncho([_|[Height|_]], Height).
+obtenerListaPixelImagen([_|[_|[ListaPixeles|_]]], ListaPixeles).
+obtenerPixeles([_|[_|[_|[Pixeles|_]]]], Pixeles).
 
 /*Predicado para verificar la pertenencia en un pixbit-d
 Dom: pixrgb-d 
-Rec: Booleano
+Meta: Saber si es un bitmap
 */
-isABitmap([]).
+isABitmap(Pixbit).
 isABitmap([Pixbitd|Cola]):-
-    pixbitD(_,_,Bit,_,Pixbitd),
-    (Bit==0 ; Bit==1),
-    isABitmap(Cola).
+    getBit(Pixbit, Bit),
+    (Bit==0 ; Bit==1).
+
+/*Predicado complemento de isABitmap
+Dom: lista
+Meta: Verificar en la lista el bitmap*/
+
+verificarBitmap([]).
+verificarBitmap([X|Y]):- isABitmap(X),verificarBitmap(Y).
+
 
 /*Predicado para verificar si existe bitmap en una imagen
 Dom: imagen
-Rec: Booleano
+Meta: A traves de los predicados complemento, saber realmente si lo que se ingresa en una imagen es un bitmap
 Ejemplo de uso: 
 
 (pixbitD( 0, 0, 1, 10, PA), pixbitD( 0, 1, 0, 20, PB), 
@@ -116,10 +155,8 @@ Retorna Falso, hay que revisar la condicion
 */
 
 imagenABitmap([]).
-imagenABitmap(Imagen):-
-    image(_,_,Pixel,Imagen),
-    isABitmap(Pixel),
-    imagenABitmap(Pixel).
+imagenABitmap(Imagen):- getListPixelImage(Imagen, Pixeles), verificarBitmap(Pixeles).
+
 
 /*Predicado para verificar si existe pixrgb en una imagen
  Dom: pixrgb
@@ -167,7 +204,6 @@ imagenIsAHexmap(Imagen):-
     imagenIsAHexmap(Pixel).
 
 
-
 /*Script de pruebas de los codigos hasta el momento empleados
 pixbitD(10, 0, 1, 1, Lista). Devuelve Lista = [10, 0, 1, 1].
 pixbitD(10, 5, 0, 5, Lista). Devuelve Lista = [10, 5, 0, 5].
@@ -178,8 +214,10 @@ pixrgbD(10, 10, 25, 25,25, 10, Lista), Devuelve Lista = [10, 10, 25, 25, 25, 10]
 pixhexD(10, 10, "#FF5733", 30, Lista), Devuelve lista = [10, 10, "#FF5733", 30].
 pixhexD(1, 12, "#F08080", 35, Lista), Devuelve lista = [1, 12, "#F08080", 35].
 pixhexD(2, 5, "#FA8072", 20, Lista), Devuelve lista = [2, 5, "#FA8072", 20].
-pixbitD(10,20,1,25,L1),pixbitD(5,10,0,20,L2),pixbitD(0,50,1,4,L3),pixbitD(10,10,0,22,L4), image(10,10,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
-pixbitD(15,22,0,22,L1),pixbitD(1,1,0,30,L2),pixbitD(5,50,0,10,L3),pixbitD(10,10,1,50,L4), image(10,2,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
-pixhexD(15,22,"#F08080",22,L1),pixhexD(1,1,"#FA8072",30,L2),pixhexD(5,50,"#FF5733",10,L3),pixhexD(10,10,"#FF5733",50,L4), image(10,2,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
-(pixbitD( 0, 0, 1, 10, PA), pixbitD( 0, 1, 0, 20, PB), pixbitD( 1, 0, 0, 30, PC), pixbitD( 1, 1, 1, 4, PD), image( 2, 2, [PA, PB, PC, PD], I), 
-imagenABitmap(I)). Retorna falso, hay que revisar la condición para verificar.
+pixbitD(10,20,1,25,L1),pixbitD(5,10,0,20,L2),pixbitD(0,50,1,4,L3),pixbitD(10,10,0,22,L4), imagen(10,10,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
+pixbitD(15,22,0,22,L1),pixbitD(1,1,0,30,L2),pixbitD(5,50,0,10,L3),pixbitD(10,10,1,50,L4), imagen(10,2,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
+pixhexD(15,22,"#F08080",22,L1),pixhexD(1,1,"#FA8072",30,L2),pixhexD(5,50,"#FF5733",10,L3),pixhexD(10,10,"#FF5733",50,L4), imagen(10,2,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
+(pixbitD( 0, 0, 1, 10, PA), pixbitD( 0, 1, 0, 20, PB), pixbitD( 1, 0, 0, 30, PC), pixbitD( 1, 1, 1, 4, PD), imagen( 2, 2, [PA, PB, PC, PD], I), 
+imagenABitmap(I)). Retorna falso, hay que revisar la condición para verificar el caso pixbitD.
+(((pixhexD( 0, 0, "#FF5733", 10, PA), pixhexD( 0, 1, "#FF5733", 20, PB), pixhexD( 1, 0, 1, 30, PC), pixhexD( 1, 1, 1, 4, PD), imagen(2,2,[PA, PB, PC, PD],I), imagenABitmap(I)))).
+Retorna Falso.
