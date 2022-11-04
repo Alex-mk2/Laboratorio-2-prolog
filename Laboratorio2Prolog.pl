@@ -17,25 +17,21 @@ Rut: 19.684.813-4
 -------------------------Constructores-------------------
 Predicado image (Constructor de imagen)
 Dominio: Width(int) X Height(int) X [pixbit-d | pixrgb-d | pixhex-d] Aridad 5
-Recorrido: Image
 Metas primaria: pixbit-d, pixrgb-d, pixhex-d, alto, ancho
 Meta Secundarias: Imagen
 
 Predicado pixbit-d
 Dominio: X(int) X Y(int) X Bit([0|1]) X Depth(int) Aridad 4
-Recorrido: pixbit-d
 Metas primaria: pixbit-d, Bit
 Metas Secundarias: Imagen
 
 Predicado pixrgb-d
 Dominio: X(int) X Y(int) X R(C) X G(C) X B(C) X D
-Recorrido: pixrgb-d
 Meta primaria: pixrgb-d
 Meta secundaria: imagen
 
 Predicado pixhex-d
 Dominio: X(int) X Y(int) X hex(string) X D(int)
-Recorrido: pixhex-d
 Meta primaria: pixhex-d
 Meta secundaria: imagen
 --------------------------------------------------------------------------------------------------------
@@ -45,7 +41,7 @@ Meta secundaria: imagen
 /*Constructor pixbit-d
 Predicado pixbit-d
 Dom: X(int) X Y(int) X Bit([0|1]) X Depth(int)
-Rec: pixbit-d
+Meta primaria: pixbit-d
 Ejemplo uso: 
 pixbitD(10, 0, 1, 1, Lista). Devuelve Lista = [10, 0, 1, 1].
 pixbitD(10, 5, 0, 5, Lista). Devuelve Lista = [10, 5, 0, 5].
@@ -65,7 +61,7 @@ obtenerListaPixel([_|[_|[_|[_|[ListaPixel|_]]]]], ListaPixel).
 /*Constructor pixrgb-d
 Predicado pixrgb.d
 Dom: X(int) X Y(int) X R(C) X G(C) X B(C) X D
-Rec: pixrgb-d
+Meta primaria: pixrgb-d
 Ejemplo uso:
 pixrgb-d(10, 10, 255, 255,255, 10, Lista), Devuelve Lista = [10, 10, 255, 255, 255, 10].
 pixrgb-d(5, 2, 55, 25,250, 4, Lista), Devuelve Lista = [5, 2, 55, 25, 250, 4].
@@ -87,7 +83,7 @@ obtenerD([_|[_|[_|[_|[_|[D|_]]]]]], D).
 /*Constructor pixhex-d
 Predicado pixhex-d
 Dom: Dominio: X(int) X Y(int) X hex(string) X D(int)
-Rec: pixhex-d
+Meta primaria: pixhex-d
 Ejemplo uso: 
 pixhexD(10, 10, "#FF5733", 30, Lista), Devuelve lista = [10, 10, "#FF5733", 30].
 pixhexD(1, 12, "#F08080", 35, Lista), Devuelve lista = [1, 12, "#F08080", 35].
@@ -106,7 +102,7 @@ obtenerDHex([_|[_|[_|[D|_]]]], D).
 /*Constructor image
 Predicado image
 Dom: Width(int) X Height(int) X [pixbit-d | pixrgb-d | pixhex-d] Aridad 5
-Meta: Construir la imagen
+Meta primaria: Construir la imagen
 Ejemplo uso: 
 pixbit-d(10,20,1,25,L1),
 pixbit-d(5,10,0,20,L2),
@@ -126,7 +122,7 @@ obtenerPixeles([_|[_|[_|[Pixeles|_]]]], Pixeles).
 
 /*Predicado para verificar la pertenencia en un pixbitD
 Dom: pixrgb-d 
-Meta: Saber si es un bitmap
+Meta secundaria: Saber si es un bitmap
 */
 isABitmap([]).
 isABitmap(Pixbit):-
@@ -135,7 +131,7 @@ isABitmap(Pixbit):-
 
 /*Predicado complemento de isABitmap
 Dom: lista
-Meta: Verificar en la lista el bitmap*/
+Meta secundaria: Verificar en la lista el bitmap*/
 
 verificarBitmap([]).
 verificarBitmap([Cabeza|Resto]):- 
@@ -145,15 +141,8 @@ verificarBitmap([Cabeza|Resto]):-
 
 /*Predicado para verificar si existe bitmap en una imagen
 Dom: imagen
-Meta: A traves de los predicados complemento, saber realmente si lo que se ingresa en una imagen es un bitmap
+Meta primaria: A traves de los predicados complemento, saber realmente si lo que se ingresa en una imagen es un bitmap
 Ejemplo de uso: 
-
-(pixbitD( 0, 0, 1, 10, PA), pixbitD( 0, 1, 0, 20, PB), 
-pixbitD( 1, 0, 0, 30, PC), 
-pixbitD( 1, 1, 1, 4, PD), 
-image( 2, 2, [PA, PB, PC, PD], I), 
-imagenABitmap(I)).
-
 (((pixhexD( 0, 0, "#FF5733", 10, PA), 
          pixhexD( 0, 1, "#FF5733", 20, PB), 
          pixhexD( 1, 0, 1, 30, PC), 
@@ -172,7 +161,7 @@ imagenIsBitmap(Imagen):-
 
 /*Predicado para verificar si existe pixrgb
  Dom: pixrgb
- Meta: Verificar si es un pixrgb con las condiciones dadas
+ Meta secundaria: Verificar si es un pixrgb con las condiciones dadas
 */
 isAPixrgbD([]).
 isAPixrgbD(Pixrgbd):-
@@ -185,7 +174,7 @@ isAPixrgbD(Pixrgbd):-
 
 /*Predicado para verificar Pixmap
  * Dom: lista
- * Meta: Como el predicador para verificar bitmap, este seria para pixmap
+ * Meta secundaria: Como el predicador para verificar bitmap, este seria para pixmap
  * y la meta sería la misma, verificar si es un pixmap
 */
 verificarPixmap([]).
@@ -195,7 +184,7 @@ verificarPixmap([Cabeza|Resto]):-
 
 /*Predicado para verificar si existe un pixmap
  * Dom: pixmap
- * Meta: Verificar si existe el pixmap (verdadero o falso) a traves de los predicados
+ * Meta Primaria: Verificar si existe el pixmap (verdadero o falso) a traves de los predicados
  * complementos.
 */
 
@@ -207,7 +196,7 @@ imagenIsAPixmap(Imagen):-
 
 /*Predicado para verificar si existe pixhex en una imagen
  * Dom: pixhexD
- * Meta o rec: verificar la existencia de pixhex y asi distinguir entre los 3 tipos de pixeles
+ * Meta secundaria: verificar la existencia de pixhex y asi distinguir entre los 3 tipos de pixeles
 */
 
 isAPixhex([]).
@@ -217,7 +206,7 @@ isAPixhex(Pixhex):-
     
 /*Predicado para verificar 
  * Dom: lista
- * Meta: De igual manera que los predicados verificarPixmap o verificarBitmap
+ * Meta secundaria: De igual manera que los predicados verificarPixmap o verificarBitmap
  * Opera de la misma manera.
 */
 
@@ -229,7 +218,7 @@ verificarHexmap([Cabeza|Resto]):-
 
 /*Predicado para verificar un hexmap
  * Dom: PixhexD
- * Meta o rec: verificar la existencia de un hexmap en una imagen
+ * Meta Primaria: verificar la existencia de un hexmap en una imagen
 */
 
 imagenIsAHexmap([]).
@@ -240,7 +229,7 @@ imagenIsAHexmap(Imagen):-
 
 /*Predicado complemento compress? verificar si se puede comprimir una imagen
  * Dom: Lista
- * Meta: complementar el predicado compress?
+ * Meta Secundaria: complementar el predicado compress?
 */
 isACompress([]).
 isACompress(Compress):-
@@ -252,7 +241,7 @@ isACompress(Compress):-
     
 /*Predicado complemento para verificar isAcompress
  * Dom: Lista
- * Meta: Complemento al predicado IsAcompress
+ * Meta Secundaria: Complemento al predicado IsAcompress
 */
 
 verificarCompress([]).
@@ -262,7 +251,7 @@ verificarCompress([Cabeza|Resto]):-
 
 /*Predicado para saber si una imagen se puede comprimir o no
  * Dom: Compress y complementos
- * Meta: Saber si es posible comprimir una imagen
+ * Meta primaria: Saber si es posible comprimir una imagen
 */
 
 compress([]).
@@ -373,4 +362,19 @@ imagenIsAHexmap(I)). Cumple con la condición
 pixbitD( 1, 2, 20, 30,PC), 
 pixbitD( 1, 1, 20, 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-compress(I)). Tira falso
+compress(I)). Retorna falso
+
+pixbitD( 0, 0, 1, 10, PA), 
+pixbitD( 0, 1, 0, 20, PB), 
+pixbitD( 1, 0, 0, 30, PC), 
+pixbitD( 1, 1, 1, 4, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+compress(I). Retorna falso
+
+pixbitD( 1, 0, 1, 10, PA), 
+pixbitD( 1, 1, 0, 10, PB), 
+pixbitD( 1, 0, 0, 10, PC), 
+pixbitD( 1, 1, 1, 10, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+compress(I).Retorna falso
+*/
