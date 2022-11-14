@@ -444,6 +444,74 @@ imagenFlipV(Imagen, NuevaImagen):-
     (imagenIsAHexmap(Imagen),flipVPixHex(ListaPixeles,Alto,NuevaListaPixeles),imagen(Alto,Ancho,NuevaListaPixeles,NuevaImagen))).
 
 
+/*Predicado para agregar elementos a la lista
+ * Dom: Elemento X Lista X elemento
+ * Meta: Añadir elementos a la lista
+*/
+append(Elemento, [], [Elemento]).
+append(Elemento, Lista, [Elemento|Lista]).
+
+/*Predicado que recorta un pixbit
+ * Dom: ListaPixbit X X(int) X Y(int) X X1(int) X (Y1) X PixbitResultante 
+ * Meta: Recortar una imagen con los pixeles pixbitD, para finalmente recortar una imagen
+*/
+
+cropPixbit([],_,_,_,_,[]).
+cropPixbit([Pixeles|Resto], X1, Y1, X2, Y2, PixbitResultante):-
+    cropPixbit(Resto, X1, Y1, X2,Y2, PixelesAnteriores),
+    pixbitD(Alto, Ancho,_,_,Pixeles),
+    (X1 =< Alto), 
+    (Alto =< X2),
+    (Y1 =< Ancho),
+    (Ancho =< Y2),
+    (append(Pixeles, PixelesAnteriores, PixbitResultante);
+    (append([],PixelesAnteriores, PixbitResultante))).
+    
+
+/*Predicado que recorta un pixrgb
+ * Dom: ListaPixRGB X X1(int) X Y1(int) X X2(int) X Y2(int) X PixRGBResultante
+ * Meta: Recortar un pixrgbD para finalmente recortar una imagen
+*/
+
+cropPixRGB([],_,_,_,_,[]).
+cropPixRGB([Pixeles|Resto], X1,Y1,X2,Y2, PixRGBResultante):-
+    cropPixRGB(Resto,X1,Y1,X2,Y2,PixelesAnteriores),
+    pixrgbD(Alto,Ancho,_,_,_,_,Pixeles),
+    (X1 =< Alto),
+    (Alto =< X2),
+    (Y1 =< Ancho),
+    (Ancho =< Y2),
+    (append(Pixeles,PixelesAnteriores, PixRGBResultante);
+    (append([],PixelesAnteriores,PixRGBResultante))).
+
+/*Predicado que recorta un pixhex
+ * Dom: ListaPixHex X X1(int) X Y1(int) X X2(int) X Y2(int) X PixHexResultante
+ * Meta: Recortar un pixhexD para finalmente recortar una imagen
+*/
+cropPixHex([],_,_,_,_,[]).
+cropPixHex([Pixeles|Resto], X1,Y1,X2,Y2,PixHexResultante):-
+    cropPixHex(Resto,X1,Y1,X2,Y2,PixelesAnteriores),
+    pixhexD(Alto,Ancho,_,_,Pixeles),
+    (X1 =< Alto), 
+    (Alto =< X2),
+    (Y1 =< Ancho),
+    (Ancho =< Y2),
+    (append(Pixeles,PixelesAnteriores,PixHexResultante);
+    (append([],PixelesAnteriores,PixHexResultante))).
+
+/*Predicado para recortar una imagen con la lista de pixeles
+ * Dom: Imagen X X1(int) X Y1(int) X X2(int) X Y2(int) X ImagenResultante
+ * Meta: Recortar una imagen con todas las listas de pixeles realizados previamente
+ * Para así obtener el recorte de una imagen con sus pixeles.
+*/
+
+imagenCrop(Imagen, X1, Y1, X2, Y2, ImagenResultante):-
+    imagen(X3, Y3, ListaPixeles, Imagen),
+    ((imagenIsABitmap(Imagen),cropPixbit(ListaPixeles,X1,Y1,X2,Y2, NuevaListaPixeles),!);
+    (imagenIsAPixmap(Imagen),cropPixRGB(ListaPixeles,X1,Y1,X2,Y2, NuevaListaPixeles),!);
+    (imagenIsAHexmap(Imagen),cropPixHex(ListaPixeles,X1,Y1,X2,Y2, NuevaListaPixeles))),
+    imagen(X3,Y3,NuevaListaPixeles,ImagenResultante).
+
 /*Script de pruebas de los codigos hasta el momento empleados
 pixbitD(10, 0, 1, 1, Lista). Devuelve Lista = [10, 0, 1, 1].
 pixbitD(10, 5, 0, 5, Lista). Devuelve Lista = [10, 5, 0, 5].
@@ -552,7 +620,7 @@ compress(I).Retorna falso
 
 
 
--------------------------------------------------imagenFliphH----------------------------------------------------------
+-------------------------------------------------imagenFlipH----------------------------------------------------------
 (pixbitD( 0, 0, 1, 10, PA), 
 pixbitD( 0, 1, 0, 20, PB), 
 pixbitD( 1, 0, 0, 30, PC), 
@@ -569,5 +637,14 @@ pixbitD( 1, 0, 0, 30, PC),
 pixbitD( 1, 1, 1, 4, PD),
 imagen( 2, 2, [PA, PB, PC, PD], I),
 imagenFlipV( I, I2 )). Retorna falso, ya que no satisface las condiciones de volteo
+
+
+
+
+---------------------------------------------------cropImagen--------------------------------------------------------------
+imagenCrop(Img1, 10, 10, 40, 40, Img2). Devuelve los elementos recortados en una imagen
+imagenCrop(Img1, 5, 5, 20, 20, Img2). Devuelve los elementos recortados en una imagen
+imagenCrop(Img1, 4, 4, 12, 12, Img2). Devuelve los elementos recortados en una imagen
+
 */
 
