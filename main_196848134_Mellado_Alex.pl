@@ -362,7 +362,7 @@ imagenFlipH(Imagen, NuevaImagen):-
  * Dom: Pixeles X Alto X NuevosPixeles
  * Meta: Voletar de forma vertical un pixbit
 */
-flipHPixBit(Pixeles,Alto,NuevosPixeles):-
+flipVPixBit(Pixeles,Alto,NuevosPixeles):-
     obtenerX(Pixeles,X),
     obtenerY(Pixeles,Y),
     obtenerBit(Pixeles,Bit),
