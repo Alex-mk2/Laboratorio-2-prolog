@@ -357,7 +357,7 @@ imagenFlipH(Imagen, NuevaImagen):-
     ((imagenIsABitmap(Imagen), flipHPixbit(ListaPixeles,Ancho,NuevaListaPixeles),imagen(Alto, Ancho, NuevaListaPixeles, NuevaImagen),!);
     (imagenIsAPixmap(Imagen), flipHPixRGB(ListaPixeles,Ancho, NuevaListaPixeles),imagen(Alto,Ancho, NuevaListaPixeles, NuevaImagen),!);
     (imagenIsAHexmap(Imagen),flipHPixHex(ListaPixeles,Ancho,NuevaListaPixeles),imagen(Alto,Ancho,NuevaListaPixeles,NuevaImagen))).
-
+    
 /*Predicado que voltea un pixbit de forma vertical
  * Dom: Pixeles X Alto X NuevosPixeles
  * Meta: Voletar de forma vertical un pixbit
@@ -370,6 +370,79 @@ flipVPixBit(Pixeles,Alto,NuevosPixeles):-
     (Y < Alto-1),
     (NuevoY is Y + 1; NuevoY is Y - 1),
     pixbitD(X, NuevoY, Bit, Depth, NuevosPixeles).
+
+/*Predicado complemento para verificar si es un flipVPixbit
+ * Dom: Lista X elemento X lista
+ * Meta: Verificar si corresponde a un flipVPixbit y si tiene las estructuras
+*/
+isAflipVPixbit([], _, []).
+isAflipVPixbit([Pixeles|Resto], Alto, [NuevosPixeles|Resto2]):-
+    flipVPixbit(Pixeles,Alto,NuevosPixeles),
+    isAflipVPixbit(Resto,Alto,Resto2).
+
+/*Predicado que voltea un pixrgb de manera vertical
+ * Dom: Pixeles X Alto X NuevosPixeles
+ * Meta: Voltear una imagen de tipo pixrgb de manera vertical
+*/
+
+flipVPixRGB(Pixeles,Alto,NuevosPixeles):-
+    obtenerX(Pixeles, X),
+    obtenerY(Pixeles,Y),
+    obtenerR(Pixeles,R),
+    obtenerG(Pixeles,G),
+    obtenerB(Pixeles,B),
+    obtenerD(Pixeles,D),
+    (Y < Alto - 1),
+    (NuevoY is Y + 1; NuevoY is Y - 1),
+    pixrgbD(X, NuevoY, R, G, B, D, NuevosPixeles).
+
+/*Predicado para verificar si es un flipVPixRGB
+ * Dom: Lista X elemento X Lista
+ * Meta: Verificar que es un flipVPixRGB y ir recorriendo
+*/
+
+isAflipVPixRGB([],_,[]).
+isAflipVPixRGB([Pixeles|Resto], Alto, [NuevosPixeles|Resto2]):-
+    flipVPixRGB(Pixeles,Alto,NuevosPixeles),
+    isAflipVPixRGB(Resto,Alto,Resto2).
+
+/*Predicado para voltear de manera vertical un pixhex
+ * Dom: Pixeles X Alto X NuevosPixeles
+ * Meta: Voltear una imagen verticalmente de tipo PixHex
+*/
+
+flipVPixHex(Pixeles,Alto,NuevosPixeles):-
+    obtenerX(Pixeles,X),
+    obtenerY(Pixeles,Y),
+    obtenerHex(Pixeles,Hex),
+    obtenerDHex(Pixeles,D),
+    (Y < Alto - 1),
+    (NuevoY is Y + 1; NuevoY is Y - 1),
+    pixhexD(X,NuevoY, Hex,D, NuevosPixeles).
+               
+/*Predicado de complemento para verificar si es un flipVPixHex
+ * Dom: Lista X elemento X lista
+ * Meta: Verificar si es un flipVPixhex               
+*/
+
+isAflipVPixHex([], _, []).
+isAflipVPixHex([Pixeles|Resto], Alto, [NuevosPixeles|Resto2]):-
+    flipVPixHex(Pixeles,Alto,NuevosPixeles),
+    isAflipVPixHex(Resto, Alto, Resto2).
+
+/*Predicado para voltear una imagen
+ * Dom: Imagen X NuevaImagen
+ * Meta: Voltear una imagen con sus debidas caracteristicas en los pixeles
+*/
+
+imagenFlipV(Imagen, NuevaImagen):-
+    obtenerAlto(Imagen, Alto),
+    obtenerAncho(Imagen, Ancho),
+    obtenerListaPixelImagen(Imagen, ListaPixeles),
+    ((imagenIsABitmap(Imagen), flipVPixBit(ListaPixeles,Alto,NuevaListaPixeles),imagen(Alto, Ancho, NuevaListaPixeles, NuevaImagen),!);
+    (imagenIsAPixmap(Imagen), flipVPixRGB(ListaPixeles,Alto, NuevaListaPixeles),imagen(Alto,Ancho, NuevaListaPixeles, NuevaImagen),!);
+    (imagenIsAHexmap(Imagen),flipVPixHex(ListaPixeles,Alto,NuevaListaPixeles),imagen(Alto,Ancho,NuevaListaPixeles,NuevaImagen))).
+
 
 /*Script de pruebas de los codigos hasta el momento empleados
 pixbitD(10, 0, 1, 1, Lista). Devuelve Lista = [10, 0, 1, 1].
@@ -489,6 +562,12 @@ imagenFlipH(I,I2)). Dará falso, ya que debe cumplir con las 3 condiciones para 
 
 
 
-
+--------------------------------------------------ImagenFlipV--------------------------------------------------------------
+(pixbitD( 0, 0, 1, 10, PA),
+pixbitD( 0, 1, 0, 20, PB),
+pixbitD( 1, 0, 0, 30, PC),
+pixbitD( 1, 1, 1, 4, PD),
+imagen( 2, 2, [PA, PB, PC, PD], I),
+imagenFlipV( I, I2 )). Retorna falso, ya que no satisface las condiciones de volteo
 */
 
