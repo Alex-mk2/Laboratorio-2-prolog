@@ -50,7 +50,7 @@ pixbitD(20, 20, 0, 10, Lista). Devuelve Lista = [20, 20, 0, 10].
 pixbitD(X, Y, Bit, Depth, [X,Y,Bit,Depth]).
 
 
-/*Selectores  TDA pitbitD*/
+/*Selectores  TDA pixbitD*/
 obtenerX([X|_], X).
 obtenerY([_|[Y|_]], Y).
 obtenerBit([_|[_|[Bit|_]]], Bit).
@@ -512,6 +512,59 @@ imagenCrop(Imagen, X1, Y1, X2, Y2, ImagenResultante):-
     (imagenIsAHexmap(Imagen),cropPixHex(ListaPixeles,X1,Y1,X2,Y2, NuevaListaPixeles))),
     imagen(X3,Y3,NuevaListaPixeles,ImagenResultante).
 
+/*Predicado complemento para convertir una imagen
+ * Dom: Elemento X Elemento
+ * Meta: Complemento para convertir una imagen
+ * Para trabajar con este apartado se uso la documentacion en prolog para convertir a hex
+ * Se trabaja con el formato 0xFF
+ */ 
+
+convertirRGBAHex(Numero,Elemento):-
+    Numero =< 0xFF,
+    format(atom(Atom_lower),'|`0t~16r~2|', Numero),
+    upcase_atom(Atom_lower,Elemento).
+
+convertirRGBAHex(Numero,Elemento):-
+    Numero =< 0xFFFF,
+    format(atom(Atom_lower),'|`0t~16r~4|', Numero),
+    upcase_atom(Atom_lower,Elemento).
+
+convertirRGBAHex(Numero,Elemento):-
+    Numero =< 0xFFFFFFFF,
+    format(atom(Atom_lower),'|`0t~16r~8|', Numero),
+    upcase_atom(Atom_lower,Elemento).
+
+convertirRGBAHex(Numero,Elemento):-
+    Numero =< 0xFFFFFFFFFFFFFFFF,
+    format(atom(Atom_lower),'|`0t~16r~16|', Numero),
+    upcase_atom(Atom_lower,Elemento).
+
+/*Predicado complemento para recorrer y convertir una lista de RGB a Hexadecimal
+ * Dom: Lista X Elemento
+ * Meta: Poder convertir una imagenRGB a una imagenHex
+*/
+
+listaImagenRGBToHex([Cabeza|Resto], PixelesHexa):-
+    imagenRGBAImagenHex(Resto, PixelesRGB),
+    pixrgbD(X, Y, R, G, B, D, Cabeza),
+    convertirRGBAHex(R, Red),
+    convertirRGBAHex(G, Green),
+    convertirRGBAHex(B, Blue),
+    string_concat(Red,Green, ListaRG),
+    string_concat(ListaRG, Blue, ListaRGB),
+    pixhexD(X,Y,ListaRGB, D, ListaPixeles),
+    append([ListaPixeles],PixelesRGB,PixelesHexa).
+
+/*Predicado para convertir una imagenRGB a una imagenHex
+ * Dom: ImagenRGB X ImagenHex
+ * Meta: Poder convertir una imagenRGB a una imagenHexa
+*/
+
+imagenRGBAImagenHex(Imagen, NuevaImagen):-
+    imagen(X,Y,ListaPixeles,Imagen),
+    listaImagenRGBToHex(ListaPixeles,NuevosPixeles),
+    imagen(X,Y,NuevosPixeles,NuevaImagen).
+
 /*Script de pruebas de los codigos hasta el momento empleados
 pixbitD(10, 0, 1, 1, Lista). Devuelve Lista = [10, 0, 1, 1].
 pixbitD(10, 5, 0, 5, Lista). Devuelve Lista = [10, 5, 0, 5].
@@ -645,6 +698,14 @@ imagenFlipV( I, I2 )). Retorna falso, ya que no satisface las condiciones de vol
 imagenCrop(Img1, 10, 10, 40, 40, Img2). Devuelve los elementos recortados en una imagen
 imagenCrop(Img1, 5, 5, 20, 20, Img2). Devuelve los elementos recortados en una imagen
 imagenCrop(Img1, 4, 4, 12, 12, Img2). Devuelve los elementos recortados en una imagen
+
+
+---------------------------------------------------imgRGB->imgHex-------------------------------------------------------------
+(pixrgbD( 0, 0, 10, 10, 10, 10, P1), 
+pixrgbD( 0, 1, 20, 20, 20, 20, P2), 
+pixrgbD( 1, 0, 30, 30, 30, 30, P3), 
+pixrgbD( 1, 1, 40, 40, 40, 40, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2)). Devuelve falso
 
 */
 
