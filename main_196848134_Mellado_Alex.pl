@@ -278,170 +278,89 @@ pertenece(Elemento, [_|Resto]):-
  * Meta: Complemento para el predicado flipH
 */
 
-flipHPixbit(Pixeles, Ancho, NuevosPixeles):-
-    obtenerX(Pixeles, X),
-    obtenerY(Pixeles, Y),
-    obtenerBit(Pixeles,Bit),
-    obtenerDepth(Pixeles,Depth),
-    (X < Ancho),
-    (NuevoX is X + 1; NuevoX is X - 1),
-    pixbitD(NuevoX, Y, Bit, Depth, NuevosPixeles). 
+flipHPixbit([], _,[]).
+flipHPixbit([Pixeles|Resto],Largo,[NewPixel|Resto2]):-
+    pixbitD(X, Y, Bit, Depth, Pixeles),
+    (   X < Largo + 1
+    ->  NewX is (X - 1)
+    ;   NewX is X
+    ),
+    pixbitD(NewX, Y, Bit, Depth, NewPixel),
+    flipHPixbit(Resto, Largo, Resto2).
 
-/*Predicado para verificar pertenece a un flipHPixBit
- * Dom: Lista X elemento X lista
- * Meta: Obtener la verificacion si es un flipH hacia un bitmap
-*/
 
-isPixelFlipHBit([], _, []).
-isPixelFlipHBit([Pixeles|Resto], Ancho, [NuevosPixeles|Resto2]):-
-    flipHPixbit(Pixeles, Ancho, NuevosPixeles),
-    isPixelFlipHBit(Resto, Ancho, Resto2).
 
 /*Predicado para voltear un pixrgb 
  * Dom: Pixeles X Ancho X NuevosPixeles 
  * Meta: Rotar un Pixel perteneciente a pixrgb
 */
 
-flipHPixRGB(Pixeles, Ancho, NuevosPixeles):-
-    obtenerX(Pixeles, X),
-    obtenerY(Pixeles,Y),
-    obtenerR(Pixeles, R),
-    obtenerG(Pixeles,G),
-    obtenerB(Pixeles,B),
-    obtenerD(Pixeles,D),
-    (X < Ancho - 1),
-    (NuevoX is X + 1; NuevoX is X - 1),
-    pixrgbD(NuevoX, Y, R, G, B, D, NuevosPixeles).
-    
-/*Predicado para verificar si pertenece a un FlipHPixRGB
- * Es la misma estructura para un flipHBit
- * Dom: Lista X Elemento X Lista
- * Meta: Verificar si es un FlipHRGB
-*/
-isAPixelFliphRGB([],_,[]).
-isAPixelFliphRGB([Pixeles|Resto],Ancho, [NuevosPixeles|Resto2]):-
-    fliphRGB(Pixeles,Ancho,NuevosPixeles),
-    isAPixelFliphRGB(Resto,Ancho,Resto2).
-
-/*Predicado para voltear un pixhex
- * Dom: Pixeles X Ancho X NuevoPixeles
- * Meta: Voltear un pixhex
-*/
-flipHPixHex(Pixeles, Ancho, NuevosPixeles):-
-    obtenerX(Pixeles, X),
-    obtenerY(Pixeles, Y),
-    obtenerHex(Pixeles,Hex),
-    obtenerDHex(Pixeles,D),
-    (X < Ancho - 1),
-    (NuevoX is X + 1; NuevoX is X - 1),
-    pixhexD(NuevoX, Y, Hex, D, NuevosPixeles).
-
-/*Predicado complemento para verificar si es un FliphPixHex
- * Dom: Lista X elemento X Lista
- * Meta: Verificar si es un fliphPixHex y si posse las mismas estructuras
-*/
-isAPixelFliphHex([],_,[]).
-isAPixelFliphHex([Pixeles|Resto],Ancho,[NuevosPixeles|Resto2]):-
-    flipHPixHex(Pixeles,Ancho,NuevosPixeles),
-    isAPixelFliphHex(Resto,Ancho,Resto2).
+flipHPixrgb([], _,[]).
+flipHPixrgb([Pixeles|Resto],Largo,[NewPixel|Resto2]):-
+    pixrgbD(X, Y, R, G, B, D , Pixeles),
+    (   X < (Largo + 1)
+    ->  NewX is ((X - 1))
+    ;   NewX is X
+    ),
+    pixrgbD(NewX, Y, R, G, B, D, NewPixel),
+    flipHPixrgb(Resto, Largo, Resto2).
 
 /*Predicado que voltea una imagen horinzontalmente
  * Dom: Imagen X NuevaImagen
  * Meta: Voltear una imagen
 */
 
-imagenFlipH(Imagen, NuevaImagen):-
-    obtenerAlto(Imagen, Alto),
-    obtenerAncho(Imagen, Ancho),
-    obtenerListaPixelImagen(Imagen, ListaPixeles),
-    ((imagenIsABitmap(Imagen), flipHPixbit(ListaPixeles,Ancho,NuevaListaPixeles),imagen(Alto, Ancho, NuevaListaPixeles, NuevaImagen),!);
-    (imagenIsAPixmap(Imagen), flipHPixRGB(ListaPixeles,Ancho, NuevaListaPixeles),imagen(Alto,Ancho, NuevaListaPixeles, NuevaImagen),!);
-    (imagenIsAHexmap(Imagen),flipHPixHex(ListaPixeles,Ancho,NuevaListaPixeles),imagen(Alto,Ancho,NuevaListaPixeles,NuevaImagen))).
+imagenFlipH(I, I2):-
+    imagen(X,Y,Pixeles,I),
+    (imagenIsAPixmap(I)
+    ->  flipHPixrgb(Pixeles,X,NuevaListaPixeles)
+    ;   flipHPixbit(Pixeles,X,NuevaListaPixeles)
+    ),
+    imagen(X, Y, NuevaListaPixeles, I2).
+   
+
     
 /*Predicado que voltea un pixbit de forma vertical
  * Dom: Pixeles X Alto X NuevosPixeles
  * Meta: Voletar de forma vertical un pixbit
 */
-flipVPixBit(Pixeles,Alto,NuevosPixeles):-
-    obtenerX(Pixeles,X),
-    obtenerY(Pixeles,Y),
-    obtenerBit(Pixeles,Bit),
-    obtenerDepth(Pixeles,Depth),
-    (Y < Alto-1),
-    (NuevoY is Y + 1; NuevoY is Y - 1),
-    pixbitD(X, NuevoY, Bit, Depth, NuevosPixeles).
-
-/*Predicado complemento para verificar si es un flipVPixbit
- * Dom: Lista X elemento X lista
- * Meta: Verificar si corresponde a un flipVPixbit y si tiene las estructuras
-*/
-isAflipVPixbit([], _, []).
-isAflipVPixbit([Pixeles|Resto], Alto, [NuevosPixeles|Resto2]):-
-    flipVPixbit(Pixeles,Alto,NuevosPixeles),
-    isAflipVPixbit(Resto,Alto,Resto2).
+flipVPixbit([], _,_,[]).
+flipVPixbit([Pixeles|Resto],Ancho,Alto,[NewPixel|Resto2]):-
+    pixbitD(X, Y, Bit, Depth, Pixeles),
+    (   Y < Alto + 1
+    ->  NewY is (Y - 1)
+    ;   NewY is Y
+    ),
+    pixbitD(X, NewY, Bit, Depth, NewPixel),
+    flipVPixbit(Resto, Ancho, Alto,Resto2).
 
 /*Predicado que voltea un pixrgb de manera vertical
  * Dom: Pixeles X Alto X NuevosPixeles
  * Meta: Voltear una imagen de tipo pixrgb de manera vertical
 */
 
-flipVPixRGB(Pixeles,Alto,NuevosPixeles):-
-    obtenerX(Pixeles, X),
-    obtenerY(Pixeles,Y),
-    obtenerR(Pixeles,R),
-    obtenerG(Pixeles,G),
-    obtenerB(Pixeles,B),
-    obtenerD(Pixeles,D),
-    (Y < Alto - 1),
-    (NuevoY is Y + 1; NuevoY is Y - 1),
-    pixrgbD(X, NuevoY, R, G, B, D, NuevosPixeles).
-
-/*Predicado para verificar si es un flipVPixRGB
- * Dom: Lista X elemento X Lista
- * Meta: Verificar que es un flipVPixRGB y ir recorriendo
-*/
-
-isAflipVPixRGB([],_,[]).
-isAflipVPixRGB([Pixeles|Resto], Alto, [NuevosPixeles|Resto2]):-
-    flipVPixRGB(Pixeles,Alto,NuevosPixeles),
-    isAflipVPixRGB(Resto,Alto,Resto2).
-
-/*Predicado para voltear de manera vertical un pixhex
- * Dom: Pixeles X Alto X NuevosPixeles
- * Meta: Voltear una imagen verticalmente de tipo PixHex
-*/
-
-flipVPixHex(Pixeles,Alto,NuevosPixeles):-
-    obtenerX(Pixeles,X),
-    obtenerY(Pixeles,Y),
-    obtenerHex(Pixeles,Hex),
-    obtenerDHex(Pixeles,D),
-    (Y < Alto - 1),
-    (NuevoY is Y + 1; NuevoY is Y - 1),
-    pixhexD(X,NuevoY, Hex,D, NuevosPixeles).
-               
-/*Predicado de complemento para verificar si es un flipVPixHex
- * Dom: Lista X elemento X lista
- * Meta: Verificar si es un flipVPixhex               
-*/
-
-isAflipVPixHex([], _, []).
-isAflipVPixHex([Pixeles|Resto], Alto, [NuevosPixeles|Resto2]):-
-    flipVPixHex(Pixeles,Alto,NuevosPixeles),
-    isAflipVPixHex(Resto, Alto, Resto2).
+flipVPixrgb([],_,_,[]).
+flipVPixrgb([Pixeles|Resto],Ancho, Alto,[NewPixel|Resto2]):-
+    pixrgbD(X, Y, R, G, B, D , Pixeles),
+    (   Y < (Alto + 1)
+    ->  NewY is ((Y - 1))
+    ;   NewY is Y
+    ),
+    pixrgbD(X, NewY, R, G, B, D, NewPixel),
+    flipVPixrgb(Resto, Ancho, Alto,Resto2).
 
 /*Predicado para voltear una imagen
  * Dom: Imagen X NuevaImagen
  * Meta: Voltear una imagen con sus debidas caracteristicas en los pixeles
 */
 
-imagenFlipV(Imagen, NuevaImagen):-
-    obtenerAlto(Imagen, Alto),
-    obtenerAncho(Imagen, Ancho),
-    obtenerListaPixelImagen(Imagen, ListaPixeles),
-    ((imagenIsABitmap(Imagen), flipVPixBit(ListaPixeles,Alto,NuevaListaPixeles),imagen(Alto, Ancho, NuevaListaPixeles, NuevaImagen),!);
-    (imagenIsAPixmap(Imagen), flipVPixRGB(ListaPixeles,Alto, NuevaListaPixeles),imagen(Alto,Ancho, NuevaListaPixeles, NuevaImagen),!);
-    (imagenIsAHexmap(Imagen),flipVPixHex(ListaPixeles,Alto,NuevaListaPixeles),imagen(Alto,Ancho,NuevaListaPixeles,NuevaImagen))).
+imagenFlipV(I, I2):-
+    imagen(X,Y,Pixeles,I),
+    (imagenIsAPixmap(I)
+    ->  flipVPixrgb(Pixeles,X,Y, NuevaListaPixeles)
+    ;   flipVPixbit(Pixeles,X,Y,NuevaListaPixeles)
+    ),
+    imagen(X, Y, NuevaListaPixeles, I2).
 
 
 /*Predicado para agregar elementos a la lista
@@ -596,13 +515,13 @@ pixhexD( 0, 1, "#FF5733", 20, PB), pixhexD( 1, 0, 1, 30, PC),
 pixhexD( 1, 1, 1, 4, PD), 
 imagen(2,2,[PA, PB, PC, PD],I), 
 imagenABitmap(I)))).
-Retorna Falso, cumple con la condición de bit.
+Retorna Falso, no cumple con la condición de bit.
 
 (pixrgbD( 0, 0, 4, 10,10, 10, PA), pixrgbD( 0, 1, 4, 20,20, 20,PB), 
 pixrgbD( 1, 0, 4, 30,30,30, PC), 
 pixrgbD( 1, 1, 4, 4,4,4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenABitmap(I)). Retorna falso, cumple con la condicion de bit
+imagenABitmap(I)). Retorna falso, no cumple con la condicion de bit
 
 --------------------------------------------------------------------Pertenencias Pixmap-------------------------------------------------------------------------------------
 
@@ -611,13 +530,13 @@ pixbitD( 0, 1, 0, 20, PB),
 pixbitD( 1, 0, 0, 30, PC), 
 pixbitD( 1, 1, 1, 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenIsAPixmap(I)). Retorna falso, cumple con la condición de pixmap
+imagenIsAPixmap(I)). Retorna falso, no cumple con la condición de pixmap
 
 (pixhexD( 0, 0, "#FA8072", 10, PA), pixhexD( 0, 1, 0, 20, PB), 
 pixhexD( 1, 0, 0, 30, PC), 
 pixhexD( 1, 1, "#FA8072", 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenIsAPixmap(I)). Retorna falso, cumple con la condicion de pixmap
+imagenIsAPixmap(I)). Retorna falso, no cumple con la condicion de pixmap
 
 (pixrgbD( 0, 0, 4, 10,10, 10, PA), pixrgbD( 0, 1, 4, 20,20, 20,PB), 
 pixrgbD( 1, 0, 4, 30,30,30, PC), 
@@ -675,25 +594,52 @@ compress(I).Retorna falso
 
 
 -------------------------------------------------imagenFlipH----------------------------------------------------------
-(pixbitD( 0, 0, 1, 10, PA), 
-pixbitD( 0, 1, 0, 20, PB), 
-pixbitD( 1, 0, 0, 30, PC), 
-pixbitD( 1, 1, 1, 4, PD), 
+(pixbitD(2, 2, 1, 10, PA), 
+pixbitD( 2, 2, 1, 0, PB), 
+pixbitD( 2, 2, 1, 10, PC), 
+pixbitD( 2, 2, 0, 10, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenFlipH(I,I2)). Dará falso, ya que debe cumplir con las 3 condiciones para voltear una imagen
+imagenFlipH(I,I2)).
 
+
+(pixrgbD(2, 2, 1, 10,10,10, PA), 
+pixrgbD( 2, 2, 1, 0,20,20, PB), 
+pixrgbD( 2, 2, 1, 10,30,30, PC), 
+pixrgbD( 2, 2, 0, 10,40,40, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+imagenFlipH(I,I2)).
+
+(pixbitD( 2, 2, 10, 10, PA), 
+pixbitD( 2, 2, 20, 20, PB), 
+pixbitD( 2, 2, 30, 30, PC), 
+pixbitD( 2, 2, 40, 40, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+imagenFlipH(I,I2)).
 
 
 --------------------------------------------------ImagenFlipV--------------------------------------------------------------
-(pixbitD( 0, 0, 1, 10, PA),
-pixbitD( 0, 1, 0, 20, PB),
-pixbitD( 1, 0, 0, 30, PC),
-pixbitD( 1, 1, 1, 4, PD),
-imagen( 2, 2, [PA, PB, PC, PD], I),
-imagenFlipV( I, I2 )). Retorna falso, ya que no satisface las condiciones de volteo
+(pixrgbD(2, 2, 1, 10,10,10, PA), 
+pixrgbD( 2, 2, 1, 0,20,20, PB), 
+pixrgbD( 2, 2, 1, 10,30,30, PC), 
+pixrgbD( 2, 2, 0, 10,40,40, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+imagenFlipV(I,I2)).
 
 
+(pixbitD( 2, 2, 1, 10, PA), 
+pixbitD( 2, 2, 1, 20, PB), 
+pixbitD( 2, 2, 1, 30, PC), 
+pixbitD( 2, 2, 1, 4, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+imagenFlipV(I,I2)).
 
+
+(pixrgbD(2, 2, 1, 10,10,10, PA), 
+pixrgbD(2, 2, 1, 0,20,20, PB), 
+pixrgbD(2, 2, 1, 10,30,30, PC), 
+pixrgbD(2, 2, 0, 10,40,40, PD), 
+imagen(2, 2, [PA, PB, PC, PD], I), 
+imagenFlipV(I,I2)).
 
 ---------------------------------------------------cropImagen--------------------------------------------------------------
 imagenCrop(Img1, 10, 10, 40, 40, Img2). Devuelve los elementos recortados en una imagen
