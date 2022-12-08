@@ -440,22 +440,22 @@ imagenCrop(Imagen, X1, Y1, X2, Y2, ImagenResultante):-
 
 convertirRGBAHex(Numero,Elemento):-
     Numero =< 0xFF,
-    format(atom(Atom_lower),'|`0t~16r~2|', Numero),
+    format(atom(Atom_lower),'|`~16r~2|', Numero),
     upcase_atom(Atom_lower,Elemento).
 
 convertirRGBAHex(Numero,Elemento):-
     Numero =< 0xFFFF,
-    format(atom(Atom_lower),'|`0t~16r~4|', Numero),
+    format(atom(Atom_lower),'|`~16r~4|', Numero),   %'|`0t~16r~4|'
     upcase_atom(Atom_lower,Elemento).
 
 convertirRGBAHex(Numero,Elemento):-
     Numero =< 0xFFFFFFFF,
-    format(atom(Atom_lower),'|`0t~16r~8|', Numero),
+    format(atom(Atom_lower),'|`~16r~8|', Numero),
     upcase_atom(Atom_lower,Elemento).
 
 convertirRGBAHex(Numero,Elemento):-
     Numero =< 0xFFFFFFFFFFFFFFFF,
-    format(atom(Atom_lower),'|`0t~16r~16|', Numero),
+    format(atom(Atom_lower),'|`~16r~16|', Numero),
     upcase_atom(Atom_lower,Elemento).
 
 /*Predicado complemento para recorrer y convertir una lista de RGB a Hexadecimal
@@ -463,17 +463,16 @@ convertirRGBAHex(Numero,Elemento):-
  * Meta: Poder convertir una imagenRGB a una imagenHex
 */
 
-listaImagenRGBToHex([], ListaPixeles, ListaPixeles).
-listaImagenRGBToHex([Cabeza|Resto], PixelesHexa, ListaPixeles):-
+listaImagenRGBToHex([], []).
+listaImagenRGBToHex([Cabeza|Resto], [PixelCambiado|Resto2]):-
     pixrgbD(X, Y, R, G, B, D, Cabeza),
     convertirRGBAHex(R, Red),
     convertirRGBAHex(G, Green),
     convertirRGBAHex(B, Blue),
     string_concat(Red,Green, ListaRG),
-    string_concat(ListaRG, Blue, ListaRGB),
-    pixhexD(X,Y,HexNew, D, _),
-    append(ListaPixeles,HexNew, PixelesHexa),
-	listaImagenRGBToHex(Resto, PixelesHexa, PixelesHexa).
+    string_concat(ListaRG, Blue, NuevoPixel),
+    pixhexD(X,Y,NuevoPixel, D, PixelCambiado),
+	listaImagenRGBToHex(Resto, Resto2).
 
 /*Predicado para convertir una imagenRGB a una imagenHex
  * Dom: ImagenRGB X ImagenHex
@@ -482,19 +481,86 @@ listaImagenRGBToHex([Cabeza|Resto], PixelesHexa, ListaPixeles):-
 
 imagenRGBAImagenHex(Imagen, NuevaImagen):-
     imagen(X,Y,ListaPixeles,Imagen),
-    listaImagenRGBToHex(ListaPixeles,_, ListaHex),
+    listaImagenRGBToHex(ListaPixeles, ListaHex),
     imagen(X,Y,ListaHex,NuevaImagen).
 
+
+/*Predicado complemento para un histograma
+ * Dom: Lista X elemento
+ * Meta: Realizar una verificacion de pixeles existentes
+*/
+
+verificarPixel(_,[]).
+verificarPixel(Pixeles,[[Pixeles|_]|_]).
+verificarPixel(Pixeles, [_|Resto]):-
+    verificarPixel(Pixeles,Resto).
+
+/*Predicado complemento para contabilizar repetidos
+ * Dom: Lista X Elemento X Elemento X Elemento
+ * Meta: Contabilizar repetidos
+*/
+contabilizarRepetidos([],_,Contador,Contador).
+contabilizarRepetidos([Pixeles|Resto],
+
+
+/*Predicado para rotar una imagen en 90 grados
+ * dom: imagen
+ * rec: imagen
+ * Para este caso se utilizará el flipV como base para realizar un rotate
+*/
+
+rotarPixrgb([],_,_,_,[]).
+rotarPixrgb([Pixeles|Resto],Acum, Largo, Ancho,[NewPixel|Resto2]):-
+    pixrgbD(_, _, R, G, B, D , Pixeles),
+    (   Acum = Largo
+    ->  NuevoAncho is (Ancho - 1)
+    ;   NewY is Ancho-1, NewX is Acum, NewAcum is Acum + 1
+    ),
+    pixrgbD(NewX, NewY, R, G, B, D, NewPixel),
+    rotarPixrgb(Resto, NewAcum, Largo, Ancho, Resto2).
+
+rotarPixbit([],_,_,_,[]).
+rotarPixbit([Pixeles|Resto],Acum,Largo,Ancho,[NewPixel|Resto2]):-
+    pixbitD(_, _, Bit, Depth, Pixeles),
+    (   Acum = Largo
+    ->  NuevoAncho is (Ancho - 1)
+    ;   NewY is Ancho-1, NewX is Acum, NewAcum is Acum + 1
+    ),
+    pixbitD(NewX, NewY, Bit, Depth, NewPixel),
+    rotarPixbit(Resto, NewAcum, Largo, Ancho,Resto2).
+
+rotate90Imagen(I, I2):-
+    imagen(X,Y,Pixeles,I),
+    (imagenIsAPixmap(I)
+    ->  rotarPixrgb(Pixeles,0,X,Y,NuevaListaPixeles)
+    ;   rotarPixbit(Pixeles,0,X,Y,NuevaListaPixeles)
+    ),
+    imagen(X, Y, NuevaListaPixeles, I2).
+
+
 /*Script de pruebas de los codigos hasta el momento empleados
+
+
+------------------------------------------------Constructor pixbitD-----------------------------------------------------------
+
 pixbitD(10, 0, 1, 1, Lista). Devuelve Lista = [10, 0, 1, 1].
 pixbitD(10, 5, 0, 5, Lista). Devuelve Lista = [10, 5, 0, 5].
 pixbitD(20, 20, 0, 10, Lista). Devuelve Lista = [20, 20, 0, 10].
+
+------------------------------------------------Constructor pixrgbD-----------------------------------------------------------
+
 pixrgbD(10, 10, 255, 255,255, 10, Lista), Devuelve Lista = [10, 10, 255, 255, 255, 10].
 pixrgbD(5, 2, 55, 25,250, 4, Lista), Devuelve Lista = [5, 2, 55, 25, 250, 4].
 pixrgbD(10, 10, 25, 25,25, 10, Lista), Devuelve Lista = [10, 10, 25, 25, 25, 10].
+
+------------------------------------------------Constructor pixhexD-----------------------------------------------------------
+
 pixhexD(10, 10, "#FF5733", 30, Lista), Devuelve lista = [10, 10, "#FF5733", 30].
 pixhexD(1, 12, "#F08080", 35, Lista), Devuelve lista = [1, 12, "#F08080", 35].
 pixhexD(2, 5, "#FA8072", 20, Lista), Devuelve lista = [2, 5, "#FA8072", 20].
+
+------------------------------------------------Constructor imagen------------------------------------------------------------
+
 pixbitD(10,20,1,25,L1),pixbitD(5,10,0,20,L2),pixbitD(0,50,1,4,L3),pixbitD(10,10,0,22,L4), imagen(10,10,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
 pixbitD(15,22,0,22,L1),pixbitD(1,1,0,30,L2),pixbitD(5,50,0,10,L3),pixbitD(10,10,1,50,L4), imagen(10,2,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
 pixhexD(15,22,"#F08080",22,L1),pixhexD(1,1,"#FA8072",30,L2),pixhexD(5,50,"#FF5733",10,L3),pixhexD(10,10,"#FF5733",50,L4), imagen(10,2,[L1,L2,L3,L4],I). Devuelve I con los parametros dados
@@ -648,23 +714,59 @@ imagenCrop(Img1, 4, 4, 12, 12, Img2). Devuelve los elementos recortados en una i
 
 
 ---------------------------------------------------imgRGB->imgHex-------------------------------------------------------------
-(pixrgbD( 0, 0, 10, 10, 10, 10, P1), 
-pixrgbD( 0, 1, 20, 20, 20, 20, P2), 
-pixrgbD( 1, 0, 30, 30, 30, 30, P3), 
-pixrgbD( 1, 1, 40, 40, 40, 40, P4), 
-imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2)). Devuelve un escrito en hexadecimal
+(pixrgbD( 2, 2, 10, 10, 10, 10, P1), 
+pixrgbD( 2, 2, 220, 220, 220, 220, P2), 
+pixrgbD( 2, 2, 30, 30, 30, 30, P3), 
+pixrgbD( 2, 2, 220, 200, 200, 200, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2)). 
 
-(pixrgbD( 0, 0, 5, 5, 5, 5, P1), 
-pixrgbD( 0, 1, 10, 10, 10, 10, P2), 
-pixrgbD( 1, 0, 30, 30, 30, 30, P3), 
-pixrgbD( 1, 1, 40, 40, 40, 40, P4), 
-imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2)). Devuelve un escrito en hexadecimal
+((pixrgbD( 2, 2, 160, 160, 160, 160, P1), 
+pixrgbD( 2, 2, 180, 180, 180, 180, P2), 
+pixrgbD( 2, 2, 200, 200, 200, 200, P3), 
+pixrgbD( 2, 2, 140, 140, 140, 140, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2))
+).
+
+(pixrgbD( 2, 2, 12, 12, 12, 12, P1), 
+pixrgbD( 2, 2, 10, 10, 10, 10, P2), 
+pixrgbD( 2, 2, 10, 10, 10, 10, P3), 
+pixrgbD( 2, 2, 200, 220, 200, 220, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2)). 
+
+
+------------------------------------------------------Histogram------------------------------------------------------------------
+
+
+
+
+
+-------------------------------------------------------Rotate90-----------------------------------------------------------------
+((pixbitD( 2, 2, 1, 10, PA), 
+pixbitD( 2, 2, 1, 20, PB), 
+pixbitD( 2, 2, 1, 30, PC), 
+pixbitD( 2, 2, 1, 4, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+rotate90Imagen(I,I2))). Rota una imagen en los primeros dos pixeles, el resto pose un error que da en dir de memoria
+
+
+((pixbitD( 2, 2, 1, 40, PA), 
+pixbitD( 2, 2, 1, 20, PB), 
+pixbitD( 2, 2, 1, 10, PC), 
+pixbitD( 2, 2, 1, 50, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+rotate90Imagen(I,I2))). De la misma manera que el anterior
+
 
 (pixrgbD( 0, 0, 5, 5, 5, 5, P1), 
 pixrgbD( 0, 1, 10, 10, 10, 10, P2), 
 pixrgbD( 1, 0, 10, 10, 10, 10, P3), 
 pixrgbD( 1, 1, 20, 20, 20, 20, P4), 
-imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2)). Devuelve un escrito en hexadecimal
+imagen( 2, 2,[ P1, P2, P3, P4], I1), rotate90Imagen(I1, I2))
+
+
+
+
+
 
 */
 
