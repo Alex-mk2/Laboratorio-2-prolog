@@ -1,3 +1,4 @@
+
 /*------------------------------------------------------
          _          _      ____      ____          
  ----   | |        / \    | __ )    |___ \    -------  
@@ -370,6 +371,8 @@ imagenFlipV(I, I2):-
 append(Elemento, [], [Elemento]).
 append(Elemento, Lista, [Elemento|Lista]).
 
+
+
 /*Predicado que recorta un pixbit
  * Dom: ListaPixbit X X(int) X Y(int) X X1(int) X (Y1) X PixbitResultante 
  * Meta: Recortar una imagen con los pixeles pixbitD, para finalmente recortar una imagen
@@ -497,10 +500,69 @@ verificarPixel(Pixeles, [_|Resto]):-
 
 /*Predicado complemento para contabilizar repetidos
  * Dom: Lista X Elemento X Elemento X Elemento
- * Meta: Contabilizar repetidos
+ * Meta: Contabilizar repetidos en una lista de pixeles
 */
 contabilizarRepetidos([],_,Contador,Contador).
-contabilizarRepetidos([Pixeles|Resto],
+contabilizarRepetidos([Pixeles|Resto],NuevoPixel, Contador2, ListaPixel):-
+    pixbitD(_,_,Bit,_,Pixeles),
+    NuevoBit = Bit,
+    (NuevoPixel = NuevoBit
+    -> Contador is Contador2 + 1
+    ;  Contador is Contador2
+    ),
+    contabilizarRepetidos(Resto,NuevoPixel,Contador,ListaPixel).
+
+/*Predicado Histograma para un pixbit, predicado que construye un histograma
+ * Dom: Lista X Elemento X elemento X elemento X ElementoH X Elemento
+ * Meta: Construir una estructura del tipo histograma para un pixbit.
+*/
+histogramaPixbit([],_,_,_,EHistograma,EHistograma).
+histogramaPixbit([Pixeles|Resto], NuevosPixeles,Alto,Ancho,Elemento,ListaPixel):-
+    pixbitD(_,_,Bit,_,Pixeles),
+    NuevoBit = Bit,
+    (verificarPixel(NuevoBit, Elemento)
+    -> histogramaPixbit(Resto,NuevosPixeles,Alto,Ancho,Elemento,ListaPixel)
+    ;  contabilizarRepetidos(Pixeles,NuevoBit,0,Contador),
+       append([NuevoBit,Contador], Elemento, EHistograma),
+       histogramaPixbit(Resto,NuevosPixeles,Alto,Ancho,EHistograma,ListaPixel)
+    ).
+
+
+/*Predicado Histograma para un pixrgb, predicado que construye un histograma
+ * Dom: Lista X Elemento X elemento X elemento X ElementoH X Elemento
+ * Meta: Construir una estructura del tipo histograma para un pixrgb.
+*/
+
+histogramaPixRGB([],_,_,_,EHistograma,EHistograma).
+histogramaPixRGB([Pixeles|Resto], NuevosPixeles,Alto,Ancho,Elemento,ListaPixel):-
+    pixrgbD(_, _, R, G, B, _, Pixeles),
+    NuevoR = R,
+    NuevoG = G,
+    NuevoB = B,
+    (verificarPixel(NuevoR, Elemento), verificarPixel(NuevoG, Elemento),verificarPixel(NuevoB, Elemento)
+    -> histogramaPixRGB(Resto,NuevosPixeles,Alto,Ancho,Elemento,ListaPixel)
+    ;  contabilizarRepetidos(Pixeles,NuevoR,0,Contador),
+       contabilizarRepetidos(Pixeles,NuevoG,0,Contador),
+       contabilizarRepetidos(Pixeles,NuevoB,0,Contador),
+       append([NuevoR,Contador], Elemento, EHistograma),
+       append([NuevoG,Contador], Elemento, EHistograma),
+       append([NuevoB,Contador], Elemento, EHistograma),
+       histogramaPixRGB(Resto,NuevosPixeles,Alto,Ancho,EHistograma,ListaPixel)
+    ).
+
+/*Predicado para implementar una imagen con el histograma
+ * Dom: Imagen X Estructura Histograma
+ * Meta: Mostrar una imagen en una estructura histograma
+ * La estructura que sigue es similar a uno de los flip realizados aquí
+*/
+
+imagenAHistograma(Imagen, Histograma):-
+    imagen(X,Y,Pixeles,Imagen),
+    (  imagenIsAPixmap(Imagen)
+    -> histogramaPixRGB(Pixeles,Pixeles,X,Y,_,Histograma)
+    ;  histogramaPixbit(Pixeles,Pixeles,X,Y,_,Histograma)
+    ).
+    
 
 
 /*Predicado para rotar una imagen en 90 grados
@@ -536,7 +598,7 @@ rotate90Imagen(I, I2):-
     ;   rotarPixbit(Pixeles,0,X,Y,NuevaListaPixeles)
     ),
     imagen(X, Y, NuevaListaPixeles, I2).
-
+                      
 
 /*Script de pruebas de los codigos hasta el momento empleados
 
@@ -567,7 +629,6 @@ pixhexD(15,22,"#F08080",22,L1),pixhexD(1,1,"#FA8072",30,L2),pixhexD(5,50,"#FF573
 
 
 ----------------------------------------------Pertenencias Bitmap----------------------------------------------------------------------------------------------------------
-
 (pixbitD( 0, 0, 1, 10, PA), 
 pixbitD( 0, 1, 0, 20, PB), 
 pixbitD( 1, 0, 0, 30, PC), 
@@ -590,7 +651,6 @@ imagen( 2, 2, [PA, PB, PC, PD], I),
 imagenABitmap(I)). Retorna falso, no cumple con la condicion de bit
 
 --------------------------------------------------------------------Pertenencias Pixmap-------------------------------------------------------------------------------------
-
 (pixbitD( 0, 0, 1, 10, PA), 
 pixbitD( 0, 1, 0, 20, PB), 
 pixbitD( 1, 0, 0, 30, PC), 
@@ -613,7 +673,6 @@ imagenIsAPixmap(I)). Retorna verdadero, cumple con la condición de pixmap
 
 
 --------------------------------------------------------------Pertenencia Hexmap--------------------------------------------------------------
-
 (pixrgbD( 0, 0, 4, 10,10, 10, PA), 
 pixrgbD( 0, 1, 4, 20,20, 20,PB), 
 pixrgbD( 1, 0, 4, 30,30,30, PC), 
@@ -735,6 +794,18 @@ imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2)).
 
 
 ------------------------------------------------------Histogram------------------------------------------------------------------
+((pixbitD( 2, 2, 1, 12,P1), 
+pixbitD( 2, 2, 0, 10,P2), 
+pixbitD( 2, 2, 1, 10,P3), 
+pixbitD( 2, 2, 0, 20, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2))).
+
+
+(pixrgbD( 0, 0, 5, 5, 5, 5, P1), 
+pixrgbD( 0, 1, 10, 10, 10, 10, P2), 
+pixrgbD( 1, 0, 10, 10, 10, 10, P3), 
+pixrgbD( 1, 1, 20, 20, 20, 20, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2))
 
 
 
