@@ -1,4 +1,3 @@
-
 /*------------------------------------------------------
          _          _      ____      ____          
  ----   | |        / \    | __ )    |___ \    -------  
@@ -154,7 +153,7 @@ Retorna Falso.
 */
 
 imagenIsABitmap([]).
-imagenIsBitmap(Imagen):- 
+imagenIsABitmap(Imagen):- 
     obtenerListaPixelImagen(Imagen, ListaPixeles), 
     verificarBitmap(ListaPixeles).
 
@@ -255,8 +254,8 @@ verificarCompress([Cabeza|Resto]):-
  * Meta primaria: Saber si es posible comprimir una imagen
 */
 
-compress([]).
-compress(Imagen):-
+compressed([]).
+compressed(Imagen):-
     obtenerListaPixelImagen(Imagen, ListaPixeles),
     verificarCompress(ListaPixeles).
 
@@ -325,7 +324,7 @@ imagenFlipH(I, I2):-
  * Dom: Pixeles X Alto X NuevosPixeles
  * Meta: Voletar de forma vertical un pixbit
 */
-flipVPixbit([], _,_,[]).
+flipVPixbit([],_,_,[]).
 flipVPixbit([Pixeles|Resto],Ancho,Alto,[NewPixel|Resto2]):-
     pixbitD(X, Y, Bit, Depth, Pixeles),
     (   Y < Alto + 1
@@ -379,16 +378,14 @@ append(Elemento, Lista, [Elemento|Lista]).
 */
 
 cropPixbit([],_,_,_,_,[]).
-cropPixbit([Pixeles|Resto], X1, Y1, X2, Y2, PixbitResultante):-
-    cropPixbit(Resto, X1, Y1, X2,Y2, PixelesAnteriores),
+cropPixbit([Pixeles|Resto], X1, Y1, X2, Y2, [NewPixel|Resto2]):-
     pixbitD(Alto, Ancho,_,_,Pixeles),
-    (X1 =< Alto), 
-    (Alto =< X2),
-    (Y1 =< Ancho),
-    (Ancho =< Y2),
-    (append(Pixeles, PixelesAnteriores, PixbitResultante);
-    (append([],PixelesAnteriores, PixbitResultante))).
-    
+    (X1 =< Alto, Alto =< X2, Y1 =< Ancho,Ancho =< Y2,
+          NewX is X2 - X1, NewY is Y2 - Y1
+       ;  NewX is X1, NewY is Y1 
+    ),
+    pixbitD(NewX,NewY, _,_,NewPixel),
+    cropPixbit(Resto, X1, Y1, X2,Y2, Resto2).
 
 /*Predicado que recorta un pixrgb
  * Dom: ListaPixRGB X X1(int) X Y1(int) X X2(int) X Y2(int) X PixRGBResultante
@@ -396,30 +393,15 @@ cropPixbit([Pixeles|Resto], X1, Y1, X2, Y2, PixbitResultante):-
 */
 
 cropPixRGB([],_,_,_,_,[]).
-cropPixRGB([Pixeles|Resto], X1,Y1,X2,Y2, PixRGBResultante):-
-    cropPixRGB(Resto,X1,Y1,X2,Y2,PixelesAnteriores),
-    pixrgbD(Alto,Ancho,_,_,_,_,Pixeles),
-    (X1 =< Alto),
-    (Alto =< X2),
-    (Y1 =< Ancho),
-    (Ancho =< Y2),
-    (append(Pixeles,PixelesAnteriores, PixRGBResultante);
-    (append([],PixelesAnteriores,PixRGBResultante))).
+cropPixRGB([Pixeles|Resto], X1,Y1,X2,Y2, [NewPixel|Resto2]):-
+     pixrgbD(Alto, Ancho,_,_,_,_,Pixeles),
+    (X1 =< Alto, Alto =< X2, Y1 =< Ancho,Ancho =< Y2,
+          NewX is X2 - X1, NewY is Y2 - Y1
+       ;  NewX is X1, NewY is Y1 
+    ),
+    pixrgbD(NewX, NewY, _,_,_,_,NewPixel),
+    cropPixbit(Resto, X1, Y1, X2,Y2, Resto2).
 
-/*Predicado que recorta un pixhex
- * Dom: ListaPixHex X X1(int) X Y1(int) X X2(int) X Y2(int) X PixHexResultante
- * Meta: Recortar un pixhexD para finalmente recortar una imagen
-*/
-cropPixHex([],_,_,_,_,[]).
-cropPixHex([Pixeles|Resto], X1,Y1,X2,Y2,PixHexResultante):-
-    cropPixHex(Resto,X1,Y1,X2,Y2,PixelesAnteriores),
-    pixhexD(Alto,Ancho,_,_,Pixeles),
-    (X1 =< Alto), 
-    (Alto =< X2),
-    (Y1 =< Ancho),
-    (Ancho =< Y2),
-    (append(Pixeles,PixelesAnteriores,PixHexResultante);
-    (append([],PixelesAnteriores,PixHexResultante))).
 
 /*Predicado para recortar una imagen con la lista de pixeles
  * Dom: Imagen X X1(int) X Y1(int) X X2(int) X Y2(int) X ImagenResultante
@@ -427,12 +409,14 @@ cropPixHex([Pixeles|Resto], X1,Y1,X2,Y2,PixHexResultante):-
  * Para así obtener el recorte de una imagen con sus pixeles.
 */
 
-imagenCrop(Imagen, X1, Y1, X2, Y2, ImagenResultante):-
-    imagen(X3, Y3, ListaPixeles, Imagen),
-    ((imagenIsABitmap(Imagen),cropPixbit(ListaPixeles,X1,Y1,X2,Y2, NuevaListaPixeles),!);
-    (imagenIsAPixmap(Imagen),cropPixRGB(ListaPixeles,X1,Y1,X2,Y2, NuevaListaPixeles),!);
-    (imagenIsAHexmap(Imagen),cropPixHex(ListaPixeles,X1,Y1,X2,Y2, NuevaListaPixeles))),
-    imagen(X3,Y3,NuevaListaPixeles,ImagenResultante).
+imagenCrop(I, X1, Y1, X2, Y2, I2):-
+    imagen(X1,Y1,Pixeles,I),
+    (imagenIsAPixmap(I)
+    ->  cropPixbit(Pixeles,X1,Y1, X2, Y2, NuevaListaPixeles)
+    ;   cropPixRGB(Pixeles,X1,Y1,X2,Y2,NuevaListaPixeles)
+    ),
+    imagen(X1, Y1, NuevaListaPixeles, I2).
+    
 
 /*Predicado complemento para convertir una imagen
  * Dom: Elemento X Elemento
@@ -565,10 +549,9 @@ imagenAHistograma(Imagen, Histograma):-
     
 
 
-/*Predicado para rotar una imagen en 90 grados
- * dom: imagen
- * rec: imagen
- * Para este caso se utilizará el flipV como base para realizar un rotate
+/*Predicado para rotar un PixRGB en 90 grados
+ * dom: Lista X Elemento X Elemento X Elemento X Lista
+ * Meta: Realizar una rotación de Pixrgb 
 */
 
 rotarPixrgb([],_,_,_,[]).
@@ -581,6 +564,11 @@ rotarPixrgb([Pixeles|Resto],Acum, Largo, Ancho,[NewPixel|Resto2]):-
     pixrgbD(NewX, NewY, R, G, B, D, NewPixel),
     rotarPixrgb(Resto, NewAcum, Largo, Ancho, Resto2).
 
+/*Predicado para rotar un pixbit en 90 grados
+ * Dom: Lista X Elemento X Elemento X Elemento X Lista
+ * Meta: Rotar un pixbit para una imagen
+*/
+
 rotarPixbit([],_,_,_,[]).
 rotarPixbit([Pixeles|Resto],Acum,Largo,Ancho,[NewPixel|Resto2]):-
     pixbitD(_, _, Bit, Depth, Pixeles),
@@ -591,6 +579,13 @@ rotarPixbit([Pixeles|Resto],Acum,Largo,Ancho,[NewPixel|Resto2]):-
     pixbitD(NewX, NewY, Bit, Depth, NewPixel),
     rotarPixbit(Resto, NewAcum, Largo, Ancho,Resto2).
 
+
+/*Predicado para rotar una imagen en base a los predicados complemento
+ * Dom: Imagen X Imagen2
+ * Meta: Rotar una imagen en 90 grados
+*/
+
+
 rotate90Imagen(I, I2):-
     imagen(X,Y,Pixeles,I),
     (imagenIsAPixmap(I)
@@ -598,8 +593,75 @@ rotate90Imagen(I, I2):-
     ;   rotarPixbit(Pixeles,0,X,Y,NuevaListaPixeles)
     ),
     imagen(X, Y, NuevaListaPixeles, I2).
-                      
 
+
+/*Predicado para cambiar el Pixel en un pixbit
+ * Dom: Lista X Elemento X Lista
+ * Meta: Cambiar el color en un pixbit
+*/
+
+cambiarPixbit([],_,[]).
+cambiarPixbit([Pixeles|Resto], PixelCambio, [NewPixel|Resto2]):-
+    pixbitD(X,Y,Bit,Depth,Pixeles),
+    pixbitD(X1,Y1, Bit,Depth,PixelCambio),
+    (   X = X1, Y = Y1,
+        pixbitD(X1,Y1,Bit,Depth,PixelCambio), append([PixelCambio],ListaPixeles,NewPixel)
+        ;append([Pixeles],ListaPixeles,NewPixel)
+    ),
+    cambiarPixbit(Resto,ListaPixeles,Resto2).
+  
+
+
+/*Predicado para cambiar el Pixel en un pixrgb
+ * Dom: Lista X Elemento X Lista
+ * Meta: Cambiar el Pixel en un pixrgb
+*/
+
+
+cambiarPixRGB([],_,[]).
+cambiarPixRGB([Pixeles|Resto], PixelCambio,[NewPixel|Resto2]):-
+    pixrgbD(X,Y,R, G, B, D, Pixeles),
+    (   X = X1, Y = Y1,
+           pixrgbD(X1,Y1,R,G,B,D, PixelCambio), append([PixelCambio],ListaPixeles,NewPixel)
+        ;  append([Pixeles],ListaPixeles,NewPixel)
+    ),
+    cambiarPixRGB(Resto,ListaPixeles,Resto2).
+    
+
+/*Predicado para cambiar el pixel en una imagen
+ * Dom: Imagen X Pixel X Imagen2
+ * Meta: Cambiar el pixel en una imagen.
+*/
+imagenCambiarPixel(I, CambioPixel, I2):-
+    imagen(X,Y,Pixeles,I),
+    (imagenIsAPixmap(I)
+    ->  cambiarPixRGB(Pixeles, CambioPixel,NuevaListaPixeles)
+    ;   cambiarPixbit(Pixeles,CambioPixel, NuevaListaPixeles)
+    ),
+    imagen(X,Y,NuevaListaPixeles, I2).
+
+
+/*Predicado para invertir el color en un pixrgb
+ * Dom: Lista X Elemento X Elemento X Lista
+ * Meta: Invertir los colores en un pixrgb
+*/
+
+invertirPixRGB([],[]).
+invertirPixRGB([X|[Y|[R|[G|[B|[D|_]]]]]], [X|[Y|[NuevoR|[NuevoG|[NuevoB|[D|[]]]]]]]):-
+    NuevoR is 255 - R, NuevoG is 255 - G, NuevoB is 255 - B.
+    
+
+
+/*Predicado para invertir los colores en una imagen
+ * Dom: Imagen X CambioPixel X Imagen2
+ * Meta: Invertir los colores en una imagen
+*/
+
+invertirColorImagen(Pixel,PixelM):-
+    isAPixrgbD(Pixel),
+    invertirPixRGB(Pixel,PixelM).
+
+    
 /*Script de pruebas de los codigos hasta el momento empleados
 
 
@@ -634,21 +696,23 @@ pixbitD( 0, 1, 0, 20, PB),
 pixbitD( 1, 0, 0, 30, PC), 
 pixbitD( 1, 1, 1, 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenABitmap(I)). 
-Retorna verdadero, cumple con la condición de bit
+imagenIsABitmap(I)). 
+
+
 
 (((pixhexD( 0, 0, "#FF5733", 10, PA), 
 pixhexD( 0, 1, "#FF5733", 20, PB), pixhexD( 1, 0, 1, 30, PC), 
 pixhexD( 1, 1, 1, 4, PD), 
 imagen(2,2,[PA, PB, PC, PD],I), 
-imagenABitmap(I)))).
-Retorna Falso, no cumple con la condición de bit.
+imagenIsABitmap(I)))).
+
+
 
 (pixrgbD( 0, 0, 4, 10,10, 10, PA), pixrgbD( 0, 1, 4, 20,20, 20,PB), 
 pixrgbD( 1, 0, 4, 30,30,30, PC), 
 pixrgbD( 1, 1, 4, 4,4,4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenABitmap(I)). Retorna falso, no cumple con la condicion de bit
+imagenIsABitmap(I)). 
 
 --------------------------------------------------------------------Pertenencias Pixmap-------------------------------------------------------------------------------------
 (pixbitD( 0, 0, 1, 10, PA), 
@@ -656,19 +720,21 @@ pixbitD( 0, 1, 0, 20, PB),
 pixbitD( 1, 0, 0, 30, PC), 
 pixbitD( 1, 1, 1, 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenIsAPixmap(I)). Retorna falso, no cumple con la condición de pixmap
+imagenIsAPixmap(I)). 
+
 
 (pixhexD( 0, 0, "#FA8072", 10, PA), pixhexD( 0, 1, 0, 20, PB), 
 pixhexD( 1, 0, 0, 30, PC), 
 pixhexD( 1, 1, "#FA8072", 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenIsAPixmap(I)). Retorna falso, no cumple con la condicion de pixmap
+imagenIsAPixmap(I)). 
+
 
 (pixrgbD( 0, 0, 4, 10,10, 10, PA), pixrgbD( 0, 1, 4, 20,20, 20,PB), 
 pixrgbD( 1, 0, 4, 30,30,30, PC), 
 pixrgbD( 1, 1, 4, 4,4,4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenIsAPixmap(I)). Retorna verdadero, cumple con la condición de pixmap
+imagenIsAPixmap(I)). 
 
 
 
@@ -678,42 +744,46 @@ pixrgbD( 0, 1, 4, 20,20, 20,PB),
 pixrgbD( 1, 0, 4, 30,30,30, PC), 
 pixrgbD( 1, 1, 4, 4,4,4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenIsAHexmap(I)). Retorna Falso, no es un hexmap
+imagenIsAHexmap(I)). 
+
 
 (pixbitD( 0, 0, 4, 10, PA), pixbitD( 0, 1, 4, 10,PB), 
 pixbitD( 1, 0, 4, 30,PC), 
 pixbitD( 1, 1, 4, 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenIsAHexmap(I)). Retorna falso, no es un hexmap
+imagenIsAHexmap(I)). 
+
 
 (pixhexD( 0, 0, "#FF5733", 10, PA), pixhexD( 0, 1, "#FF5733", 10,PB), 
 pixhexD( 1, 0, "#FF5733", 30,PC), 
 pixhexD( 1, 1, "#FF5733", 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-imagenIsAHexmap(I)). Cumple con la condición
+imagenIsAHexmap(I)). 
 
 
 
-------------------------------------------------------------Compress---------------------------------------------------------------------------
+------------------------------------------------------------Compressed---------------------------------------------------------------------------
 (pixbitD( 0, 0, 20, 10, PA), pixbitD( 0, 1, 20, 10,PB), 
 pixbitD( 1, 2, 20, 30,PC), 
 pixbitD( 1, 1, 20, 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-compress(I)). Retorna falso
+compressed(I)). 
+
 
 pixbitD( 0, 0, 1, 10, PA), 
 pixbitD( 0, 1, 0, 20, PB), 
 pixbitD( 1, 0, 0, 30, PC), 
 pixbitD( 1, 1, 1, 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-compress(I). Retorna falso
+compressed(I). 
+
 
 pixbitD( 1, 0, 1, 10, PA), 
 pixbitD( 1, 1, 0, 10, PB), 
 pixbitD( 1, 0, 0, 10, PC), 
 pixbitD( 1, 1, 1, 10, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-compress(I).Retorna falso
+compressed(I).
 
 
 
@@ -733,6 +803,7 @@ pixrgbD( 2, 2, 1, 10,30,30, PC),
 pixrgbD( 2, 2, 0, 10,40,40, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
 imagenFlipH(I,I2)).
+
 
 (pixbitD( 2, 2, 10, 10, PA), 
 pixbitD( 2, 2, 20, 20, PB), 
@@ -767,9 +838,9 @@ imagen(2, 2, [PA, PB, PC, PD], I),
 imagenFlipV(I,I2)).
 
 ---------------------------------------------------cropImagen--------------------------------------------------------------
-imagenCrop(Img1, 10, 10, 40, 40, Img2). Devuelve los elementos recortados en una imagen
-imagenCrop(Img1, 5, 5, 20, 20, Img2). Devuelve los elementos recortados en una imagen
-imagenCrop(Img1, 4, 4, 12, 12, Img2). Devuelve los elementos recortados en una imagen
+imagenCrop(Img1, 10, 10, 40, 40, Img2). 
+imagenCrop(Img1, 5, 5, 20, 20, Img2). 
+imagenCrop(Img1, 4, 4, 12, 12, Img2). 
 
 
 ---------------------------------------------------imgRGB->imgHex-------------------------------------------------------------
@@ -801,14 +872,18 @@ pixbitD( 2, 2, 0, 20, P4),
 imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2))).
 
 
-(pixrgbD( 0, 0, 5, 5, 5, 5, P1), 
-pixrgbD( 0, 1, 10, 10, 10, 10, P2), 
-pixrgbD( 1, 0, 10, 10, 10, 10, P3), 
-pixrgbD( 1, 1, 20, 20, 20, 20, P4), 
-imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2))
+(pixrgbD( 2, 2, 12, 12, 12, 12, P1), 
+pixrgbD( 2, 2, 10, 10, 10, 10, P2), 
+pixrgbD( 2, 2, 10, 10, 10, 10, P3), 
+pixrgbD( 2, 2, 200, 220, 200, 220, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2)).
 
 
-
+(pixrgbD( 2, 2, 12, 12, 12, 12, P1), 
+pixrgbD( 2, 2, 100, 100, 100, 100, P2), 
+pixrgbD( 2, 2, 20, 20, 20, 20, P3), 
+pixrgbD( 2, 2, 200, 220, 200, 220, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2)).
 
 
 -------------------------------------------------------Rotate90-----------------------------------------------------------------
@@ -817,7 +892,7 @@ pixbitD( 2, 2, 1, 20, PB),
 pixbitD( 2, 2, 1, 30, PC), 
 pixbitD( 2, 2, 1, 4, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-rotate90Imagen(I,I2))). Rota una imagen en los primeros dos pixeles, el resto pose un error que da en dir de memoria
+rotate90Imagen(I,I2))). 
 
 
 ((pixbitD( 2, 2, 1, 40, PA), 
@@ -825,16 +900,70 @@ pixbitD( 2, 2, 1, 20, PB),
 pixbitD( 2, 2, 1, 10, PC), 
 pixbitD( 2, 2, 1, 50, PD), 
 imagen( 2, 2, [PA, PB, PC, PD], I), 
-rotate90Imagen(I,I2))). De la misma manera que el anterior
+rotate90Imagen(I,I2))). 
 
 
-(pixrgbD( 0, 0, 5, 5, 5, 5, P1), 
-pixrgbD( 0, 1, 10, 10, 10, 10, P2), 
-pixrgbD( 1, 0, 10, 10, 10, 10, P3), 
-pixrgbD( 1, 1, 20, 20, 20, 20, P4), 
-imagen( 2, 2,[ P1, P2, P3, P4], I1), rotate90Imagen(I1, I2))
+(pixrgbD( 2, 2, 12, 12, 12, 12, P1), 
+pixrgbD( 2, 2, 10, 10, 10, 10, P2), 
+pixrgbD( 2, 2, 10, 10, 10, 10, P3), 
+pixrgbD( 2, 2, 200, 220, 200, 220, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), rotate90Imagen(I1, I2)).
 
 
+/--------------------------------------------------------ChangePixel-------------------------------------------------------------------------
+ pixrgbD( 0, 0, 10, 10, 10, 10, P1), 
+ pixrgbD( 0, 1, 20, 20, 20, 20, P2), 
+ pixrgbD( 1, 0, 30, 30, 30, 30, P3), 
+ pixrgbD( 1, 1, 40, 40, 40, 40, P4), 
+ imagen( 2, 2, [P1, P2, P3, P4], I1), 
+ pixrgbD( 0, 1, 54, 54, 54, 20, P2_modificado), 
+ imagenCambiarPixel(I1, P2_modificado, I2).
+
+
+ pixrgbD( 2, 2, 10, 10, 10, 10, P1), 
+ pixrgbD( 2, 2, 20, 20, 20, 20, P2), 
+ pixrgbD( 2, 2, 30, 30, 30, 30, P3), 
+ pixrgbD( 2, 2, 40, 40, 40, 40, P4), 
+ imagen( 2, 2, [P1, P2, P3, P4], I1), 
+ pixrgbD( 2, 2, 50, 50, 50, 20, P2_modificado), 
+ imagenCambiarPixel(I1, P2_modificado, I2).
+
+
+ pixrgbD( 0, 0, 10, 10, 10, 10, P1), 
+ pixrgbD( 1, 1, 20, 20, 20, 20, P2), 
+ pixrgbD( 1, 2, 30, 30, 30, 30, P3), 
+ pixrgbD( 1, 1, 40, 40, 40, 40, P4), 
+ imagen( 2, 2, [P1, P2, P3, P4], I1), 
+ pixrgbD( 1, 1, 54, 54, 54, 20, P2_modificado), 
+ imagenCambiarPixel(I1, P2_modificado, I2).
+
+
+
+
+ ---------------------------------------------------------invertColorRGB--------------------------------------------------------------------
+
+pixrgbD( 0, 0, 10, 10, 10, 10, P1), 
+pixrgbD( 0, 1, 20, 20, 20, 20, P2), 
+pixrgbD( 1, 0, 30, 30, 30, 30, P3), 
+pixrgbD( 1, 1, 40, 40, 40, 40, P4), 
+imagen( 2, 2, [P1, P2, P3, P4], I1), 
+invertirColorImagen(P2, P2_modificado).
+
+
+pixrgbD( 0, 0, 10, 10, 10, 10, P1), 
+pixrgbD( 0, 1, 20, 20, 20, 20, P2), 
+pixrgbD( 1, 0, 30, 30, 30, 30, P3), 
+pixrgbD( 1, 1, 40, 40, 40, 40, P4), 
+imagen( 2, 2, [P1, P2, P3, P4], I1), 
+invertirColorImagen(P1, P2_modificado).
+
+
+pixrgbD( 0, 0, 10, 10, 10, 10, P1), 
+pixrgbD( 0, 1, 20, 20, 20, 20, P2), 
+pixrgbD( 1, 0, 30, 30, 30, 30, P3), 
+pixrgbD( 1, 1, 40, 40, 40, 40, P4), 
+imagen( 2, 2, [P1, P2, P3, P4], I1), 
+invertirColorImagen(P3, P2_modificado).
 
 
 
