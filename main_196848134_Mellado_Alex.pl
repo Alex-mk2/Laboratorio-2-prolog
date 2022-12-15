@@ -1,3 +1,4 @@
+
 /*------------------------------------------------------
          _          _      ____      ____          
  ----   | |        / \    | __ )    |___ \    -------  
@@ -367,8 +368,9 @@ imagenFlipV(I, I2):-
  * Dom: Elemento X Lista X elemento
  * Meta: Añadir elementos a la lista
 */
-append(Elemento, [], [Elemento]).
-append(Elemento, Lista, [Elemento|Lista]).
+append(E, [], [E]). 
+append(E, [X|Y], [X|Z]):-
+    append(E, Y, Z).
 
 
 
@@ -477,38 +479,62 @@ imagenRGBAImagenHex(Imagen, NuevaImagen):-
  * Meta: Realizar una verificacion de pixeles existentes
 */
 
-verificarPixel(_,[]).
-verificarPixel(Pixeles,[[Pixeles|_]|_]).
-verificarPixel(Pixeles, [_|Resto]):-
-    verificarPixel(Pixeles,Resto).
+
+estaPixelEnLista(_, []):-!, false. 
+estaPixelEnLista(Pixel, [[Pixel|_]|_]):-!, true. 
+estaPixelEnLista(Pixel, [_|Cdr]):- 
+    estaPixelEnLista(Pixel, Cdr).
+
+
 
 /*Predicado complemento para contabilizar repetidos
  * Dom: Lista X Elemento X Elemento X Elemento
  * Meta: Contabilizar repetidos en una lista de pixeles
 */
-contabilizarRepetidos([],_,Contador,Contador).
-contabilizarRepetidos([Pixeles|Resto],NuevoPixel, Contador2, ListaPixel):-
+contabilizarRepetidos([],_,Contador,Contador):-!.
+contabilizarRepetidos([Pixeles|Resto],Pixel, Contador2, ListaPixel):-
     pixbitD(_,_,Bit,_,Pixeles),
-    NuevoBit = Bit,
-    (NuevoPixel = NuevoBit
+    (Pixel = Bit
     -> Contador is Contador2 + 1
     ;  Contador is Contador2
     ),
-    contabilizarRepetidos(Resto,NuevoPixel,Contador,ListaPixel).
+    contabilizarRepetidos(Resto,Pixel,Contador,ListaPixel).
+
+
+/*Predicado para concadenar elementos
+ * Dom: Lista X Elemento X Elemento
+ * Meta: Concatenar elementos
+*/
+concatena([], L, L).
+concatena([X|L1], L2, [X|L3]) :- concatena(L1, L2, L3).
+
+
+/*Predicado complemento para contabilizar repetidos para un pixrgb
+ * Dom: Lista X Elemento X Elemento X Elemento
+ * Meta: Contabilizar repetidos en una lista de pixeles, en este caso pixrgb
+*/
+contabilizarRepetidosRGB([],_,Contador,Contador):-!.
+contabilizarRepetidosRGB([Pixeles|Resto],Pixel, Contador2, ListaPixel):-
+    pixrgbD(_,_,R,G,B,_,Pixeles),
+    atomic_list_concat([R,G,B],Lista),
+    (Lista = Pixel
+    -> Contador is Contador2 + 1
+    ;  Contador is Contador2
+    ),
+    contabilizarRepetidosRGB(Resto,Pixel,Contador,ListaPixel).
 
 /*Predicado Histograma para un pixbit, predicado que construye un histograma
  * Dom: Lista X Elemento X elemento X elemento X ElementoH X Elemento
  * Meta: Construir una estructura del tipo histograma para un pixbit.
 */
-histogramaPixbit([],_,_,_,EHistograma,EHistograma).
-histogramaPixbit([Pixeles|Resto], NuevosPixeles,Alto,Ancho,Elemento,ListaPixel):-
+histogramaPixbit([],_,Histograma,Histograma):-!.
+histogramaPixbit([Pixeles|Resto],Pixeles2,Elemento,ListaPixel):-
     pixbitD(_,_,Bit,_,Pixeles),
-    NuevoBit = Bit,
-    (verificarPixel(NuevoBit, Elemento)
-    -> histogramaPixbit(Resto,NuevosPixeles,Alto,Ancho,Elemento,ListaPixel)
-    ;  contabilizarRepetidos(Pixeles,NuevoBit,0,Contador),
-       append([NuevoBit,Contador], Elemento, EHistograma),
-       histogramaPixbit(Resto,NuevosPixeles,Alto,Ancho,EHistograma,ListaPixel)
+    (estaPixelEnLista(Pixeles, Elemento)
+    ->histogramaPixbit(Resto,Pixeles2,Elemento,ListaPixel)
+    ; contabilizarRepetidos(Pixeles2,Bit,0,Contador),
+        append([Pixeles,Contador], Elemento, Histograma),
+        histogramaPixbit(Resto,Pixeles2,Histograma,ListaPixel)
     ).
 
 
@@ -517,21 +543,15 @@ histogramaPixbit([Pixeles|Resto], NuevosPixeles,Alto,Ancho,Elemento,ListaPixel):
  * Meta: Construir una estructura del tipo histograma para un pixrgb.
 */
 
-histogramaPixRGB([],_,_,_,EHistograma,EHistograma).
-histogramaPixRGB([Pixeles|Resto], NuevosPixeles,Alto,Ancho,Elemento,ListaPixel):-
+histogramaPixRGB([],_,Histograma,Histograma).
+histogramaPixRGB([Pixeles|Resto], Pixeles2,Elemento,ListaPixel):-
     pixrgbD(_, _, R, G, B, _, Pixeles),
-    NuevoR = R,
-    NuevoG = G,
-    NuevoB = B,
-    (verificarPixel(NuevoR, Elemento), verificarPixel(NuevoG, Elemento),verificarPixel(NuevoB, Elemento)
-    -> histogramaPixRGB(Resto,NuevosPixeles,Alto,Ancho,Elemento,ListaPixel)
-    ;  contabilizarRepetidos(Pixeles,NuevoR,0,Contador),
-       contabilizarRepetidos(Pixeles,NuevoG,0,Contador),
-       contabilizarRepetidos(Pixeles,NuevoB,0,Contador),
-       append([NuevoR,Contador], Elemento, EHistograma),
-       append([NuevoG,Contador], Elemento, EHistograma),
-       append([NuevoB,Contador], Elemento, EHistograma),
-       histogramaPixRGB(Resto,NuevosPixeles,Alto,Ancho,EHistograma,ListaPixel)
+    atomic_list_concat([R,G,B],Lista),
+    (estaPixelEnLista(Pixeles, Elemento), estaPixelEnLista(Pixeles, Elemento),estaPixelEnLista(Pixeles, Elemento)
+    -> histogramaPixRGB(Resto,Pixeles2,Elemento,ListaPixel)
+    ;  contabilizarRepetidosRGB(Pixeles2,Lista,0,Contador),
+       append([Pixeles,Contador], Elemento, Histograma),
+       histogramaPixRGB(Resto,Pixeles2,Histograma,ListaPixel)
     ).
 
 /*Predicado para implementar una imagen con el histograma
@@ -541,10 +561,10 @@ histogramaPixRGB([Pixeles|Resto], NuevosPixeles,Alto,Ancho,Elemento,ListaPixel):
 */
 
 imagenAHistograma(Imagen, Histograma):-
-    imagen(X,Y,Pixeles,Imagen),
+    imagen(_,_,Pixeles,Imagen),
     (  imagenIsAPixmap(Imagen)
-    -> histogramaPixRGB(Pixeles,Pixeles,X,Y,_,Histograma)
-    ;  histogramaPixbit(Pixeles,Pixeles,X,Y,_,Histograma)
+    -> histogramaPixRGB(Pixeles,Pixeles,_,Histograma)
+    ;  histogramaPixbit(Pixeles,Pixeles,_,Histograma)
     ).
     
 
@@ -661,7 +681,53 @@ invertirColorImagen(Pixel,PixelM):-
     isAPixrgbD(Pixel),
     invertirPixRGB(Pixel,PixelM).
 
+
+/*Predicado para transformar una pixbit a string
+ * Dom: Lista X Elemento X Elemento X Lista
+ * Meta: Transformar un pixbit a string
+*/
+
+pixelToStringPixbit([],_,_,[]). 
+pixelToStringPixbit([Pixel|Pixeles], Acum, Ancho, [StrTemp|Resto2]):-
+    pixbitD(_,_,Bit,_,Pixel),
+    NewAcum is Acum + 1,
+    (   NewAcum = Ancho 
+    ->  atomic_concat(Bit, '\n', StrTemp), pixelToStringPixbit(Pixeles, 0, Ancho, Resto2)
+    ;   atomic_concat(Bit, '\t', StrTemp), pixelToStringPixbit(Pixeles, NewAcum, Ancho, Resto2)
+    ).
+
+
+
+/*Predicado para transformar un pixrgb a string
+ * Dom: Lista X Elemento x Elemento X Lista
+ * Meta: Transformar un pixrgb a string
+*/
+
+pixelToStringPixrgb([],_,_,[]). 
+pixelToStringPixrgb([Pixel|Pixeles], Acum, Ancho, [StrTemp|Resto2]):-
+    pixrgbD(_,_,R,G,B,_,Pixel),
+    atomic_list_concat([R,G,B],Lista),
+    NewAcum is Acum + 1,
+    (   NewAcum = Ancho 
+    ->  atomic_concat(Lista,'\n', StrTemp),pixelToStringPixrgb(Pixeles, 0, Ancho, Resto2)
+    ;   atomic_concat(Lista,'\t', StrTemp),pixelToStringPixrgb(Pixeles, NewAcum, Ancho, Resto2)
+    ).
+
+
+/*Predicado para transformar una imagen a string
+ * Dom: imagen X string
+ * Meta: Transformar una imagen a string
+*/
+
+imagenToString(I,String):-
+     imagen(X,Y,Pixeles,I),
+    (  imagenIsAPixmap(I)
+    -> pixelToStringPixrgb(Pixeles,X,Y,Str)
+    ;  pixelToStringPixbit(Pixeles,X,Y,Str)
+    ),
+    imagen(X,Y,Str,String).
     
+
 /*Script de pruebas de los codigos hasta el momento empleados
 
 
@@ -701,7 +767,8 @@ imagenIsABitmap(I)).
 
 
 (((pixhexD( 0, 0, "#FF5733", 10, PA), 
-pixhexD( 0, 1, "#FF5733", 20, PB), pixhexD( 1, 0, 1, 30, PC), 
+pixhexD( 0, 1, "#FF5733", 20, PB), 
+pixhexD( 1, 0, 1, 30, PC), 
 pixhexD( 1, 1, 1, 4, PD), 
 imagen(2,2,[PA, PB, PC, PD],I), 
 imagenIsABitmap(I)))).
@@ -865,18 +932,18 @@ imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenRGBAImagenHex(I1, I2)).
 
 
 ------------------------------------------------------Histogram------------------------------------------------------------------
-((pixbitD( 2, 2, 1, 12,P1), 
+(((pixbitD( 2, 2, 1, 12,P1), 
 pixbitD( 2, 2, 0, 10,P2), 
 pixbitD( 2, 2, 1, 10,P3), 
 pixbitD( 2, 2, 0, 20, P4), 
-imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2))).
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2)))).
 
 
-(pixrgbD( 2, 2, 12, 12, 12, 12, P1), 
-pixrgbD( 2, 2, 10, 10, 10, 10, P2), 
-pixrgbD( 2, 2, 10, 10, 10, 10, P3), 
-pixrgbD( 2, 2, 200, 220, 200, 220, P4), 
-imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2)).
+(((pixbitD( 0, 1, 1, 12,P1), 
+pixbitD( 1, 0, 0, 10,P2), 
+pixbitD( 1, 1, 1, 10,P3), 
+pixbitD( 1, 2, 0, 20, P4), 
+imagen( 2, 2,[ P1, P2, P3, P4], I1), imagenAHistograma(I1, I2)))).
 
 
 (pixrgbD( 2, 2, 12, 12, 12, 12, P1), 
@@ -965,8 +1032,31 @@ pixrgbD( 1, 1, 40, 40, 40, 40, P4),
 imagen( 2, 2, [P1, P2, P3, P4], I1), 
 invertirColorImagen(P3, P2_modificado).
 
+-----------------------------------------------ImageToString-------------------------------------------------------------
 
+pixbitD( 0, 0, 1, 10, PA), 
+pixbitD( 0, 1, 0, 20, PB), 
+pixbitD( 1, 0, 0, 30, PC), 
+pixbitD( 1, 1, 1, 4, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+imagenToString(I, Str), 
+display(Str).
 
+pixrgbD( 0, 0, 0, 0,0,10, PA), 
+pixrgbD( 0, 1, 0, 0,0,20, PB), 
+pixrgbD( 1, 0, 0, 0,0,30, PC), 
+pixrgbD( 1, 1, 1, 0,0,4, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+imagenToString(I, Str), 
+display(Str).
+
+pixbitD( 0, 0, 1, 10, PA), 
+pixbitD( 0, 1, 1, 20, PB), 
+pixbitD( 1, 0, 1, 30, PC), 
+pixbitD( 1, 1, 0, 4, PD), 
+imagen( 2, 2, [PA, PB, PC, PD], I), 
+imagenToString(I, Str), 
+display(Str).
 
 */
 
